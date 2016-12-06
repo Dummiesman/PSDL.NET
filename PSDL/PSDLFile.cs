@@ -80,7 +80,7 @@ namespace PSDL
 
                 //read Floats
                 var  numFloats = r.ReadUInt32();
-                for (int i = 0; i < numFloats; i++)
+                for (var i = 0; i < numFloats; i++)
                 {
                     Floats.Add(r.ReadSingle());
                 }
@@ -588,7 +588,7 @@ namespace PSDL
                     if (_textures[i].Length > 0)
                     {
                         w.Write((byte)(_textures[i].Length + 1));
-                        for (int j = 0; j < _textures[i].Length; j++)
+                        for (var j = 0; j < _textures[i].Length; j++)
                         {
                             w.Write(_textures[i][j]);
                         }
@@ -630,10 +630,8 @@ namespace PSDL
 
                     }
 
-                    //write attribs
+                    //write elements
                     var lastTextureHash = "$$";
-                    var lastWrittenWasTexture = false;
-
                     var attributeStartPtr = w.BaseStream.Position;
 
                     for (var j = 0; j < rm.Elements.Count; j++)
@@ -646,10 +644,10 @@ namespace PSDL
                             if (texHash != null)
                             {
                                 //generate a new texture
-                                int textureIndex = textureHashDictionary[texHash];
+                                var textureIndex = textureHashDictionary[texHash];
 
                                 //some Elements require a texture offset
-                                int textureOffset = 0;
+                                var textureOffset = 0;
                                 if (el is CrosswalkElement)
                                 {
                                     textureOffset = -2;
@@ -669,11 +667,9 @@ namespace PSDL
                                 w.Write(textureHeader);
 
                                 w.Write((ushort)(textureIndexByte + 1));
-                                lastWrittenWasTexture = true;
                             }
                             else
                             {
-                                lastWrittenWasTexture = true;
                                 //null texture
                                 w.Write(BuildAttributeHeader(false, 10, 0));
                                 w.Write((ushort)(0));
@@ -690,10 +686,10 @@ namespace PSDL
                     }
 
                     //finally, write attribute length
-                    uint attributeTotalSize = (uint)((w.BaseStream.Position - attributeStartPtr) / 2);
+                    var attributeTotalSize = (uint)((w.BaseStream.Position - attributeStartPtr) / 2);
 
                     w.BaseStream.Seek(attributeLengthPtr, SeekOrigin.Begin);
-                    w.Write((uint)(attributeTotalSize));
+                    w.Write(attributeTotalSize);
                     w.BaseStream.Seek(0, SeekOrigin.End);
                 }
 
@@ -704,7 +700,6 @@ namespace PSDL
                     w.Write((byte)Rooms[i].Flags);
                 }
 
-                Console.WriteLine("Writing room prop rules");
                 //write padding(?) byte, and room proprules
                 w.Write((byte)0xcd);
                 for (var i = 0; i < Rooms.Count; i++)
@@ -712,7 +707,6 @@ namespace PSDL
                     w.Write(Rooms[i].PropRule);
                 }
 
-                Console.WriteLine("Writing dimensions");
                 //write dimensions
                 w.Write(dimensionsMin.x);
                 w.Write(dimensionsMin.y);
