@@ -80,9 +80,9 @@ namespace PSDL.Elements
         }
 
         //Constructors
-        public RoofTriangleFanElement(string texture, float height, Vertex[] vertices)
+        public RoofTriangleFanElement(string texture, float height, IEnumerable<Vertex> vertices)
         {
-            Textures = new string[] { texture };
+            Textures = new []{ texture };
             Height = height;
             Vertices.AddRange(vertices);
         }

@@ -7,7 +7,8 @@ using System.Text;
 
 namespace PSDL.Elements
 {
-    //RoadTriangleFan is just a copy of TriangleFan with a different Type :/
+    //CulledTriangleFan is a copy of TriangleFan, but the game won't
+    //render it if it's first vertex is above the camera
     public class CulledTriangleFanElement : TriangleFanElement
     {
         public override int GetElementType()

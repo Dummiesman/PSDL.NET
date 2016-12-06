@@ -79,10 +79,16 @@ namespace PSDL.Elements
             }
         }
 
-        //Constructors
-        public WalkwayElement(string texture, Vertex[] vertices)
+        //API
+        public void AddRow(Vertex leftSide, Vertex rightSide)
         {
-            Textures = new string[] { texture };
+            Vertices.AddRange(new []{leftSide, rightSide});
+        }
+
+        //Constructors
+        public WalkwayElement(string texture, IEnumerable<Vertex> vertices)
+        {
+            Textures = new []{ texture };
             Vertices.AddRange(vertices);
         }
 

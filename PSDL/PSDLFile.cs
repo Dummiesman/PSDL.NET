@@ -37,7 +37,7 @@ namespace PSDL
             _elementMapBuilt = true;
             _elementMap = new Dictionary<int, Type>();
 
-            foreach (var mytype in System.Reflection.Assembly.GetExecutingAssembly().GetTypes().Where(mytype => mytype.GetInterfaces().Contains(typeof(IPSDLElement))))
+            foreach (var mytype in Assembly.GetExecutingAssembly().GetTypes().Where(mytype => mytype.GetInterfaces().Contains(typeof(IPSDLElement))))
             {
                 var element = (IPSDLElement)Activator.CreateInstance(mytype);
                 _elementMap[element.GetElementType()] = element.GetType();
@@ -58,8 +58,7 @@ namespace PSDL
             var r = new BinaryReader(File.OpenRead(_filePath));
             using (r)
             {
-
-                //proper header?
+                //verify our magic is PSD0
                 var magic = r.ReadUInt32();
                 if (magic != 809784144)
                 {
@@ -79,18 +78,18 @@ namespace PSDL
                     Vertices.Add(new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()));
                 }
 
-                //read floats
-                uint numFloats = r.ReadUInt32();
+                //read Floats
+                var  numFloats = r.ReadUInt32();
                 for (int i = 0; i < numFloats; i++)
                 {
                     Floats.Add(r.ReadSingle());
                 }
 
                 //read Textures
-                uint numTextures = r.ReadUInt32() - 1;
+                var numTextures = r.ReadUInt32() - 1;
                 for (var i = 0; i < numTextures; i++)
                 {
-                    byte textureLen = r.ReadByte();
+                    var textureLen = r.ReadByte();
                     if (textureLen > 0)
                     {
                         _textures.Add(new string(r.ReadChars(textureLen - 1)));
@@ -133,7 +132,7 @@ namespace PSDL
                     while (r.BaseStream.Position < (attributeStartAddress + (numAttributes * 2)))
                     {
                         //extract attribute Type and subtype
-                        ushort att = r.ReadUInt16();
+                        var att = r.ReadUInt16();
                         var type = att >> 3 & 15;
                         var subtype = att & 7;
 
@@ -306,6 +305,7 @@ namespace PSDL
             }
             return hash;
         }
+
 
         private void BuildVertexCache(IEnumerable<Vertex> vertices)
         {
@@ -505,6 +505,36 @@ namespace PSDL
 
         }
 
+        public void RecalculateBounds()
+        {
+            var average = new Vertex(0, 0, 0);
+            foreach (var vtx in Vertices)
+            {
+                dimensionsMin.x = Math.Min(vtx.x, dimensionsMin.x);
+                dimensionsMin.y = Math.Min(vtx.y, dimensionsMin.y);
+                dimensionsMin.z = Math.Min(vtx.z, dimensionsMin.z);
+                dimensionsMax.x = Math.Max(vtx.x, dimensionsMax.x);
+                dimensionsMax.y = Math.Max(vtx.y, dimensionsMax.y);
+                dimensionsMax.z = Math.Max(vtx.z, dimensionsMax.z);
+                average += vtx;
+            }
+
+            average /= Vertices.Count;
+            dimensionsCenter = average;
+
+            float radius = 0;
+            radius = dimensionsMax.x - dimensionsMin.x;
+            if (dimensionsMax.y - dimensionsMin.y > radius)
+            {
+                radius = dimensionsMax.y - dimensionsMin.y;
+            }
+            else
+            {
+                radius = dimensionsMax.z - dimensionsMin.z;
+            }
+            dimensionsRadius = radius/2;
+        }
+
         public void ReSave()
         {
             if (_filePath == null)
@@ -523,6 +553,7 @@ namespace PSDL
             //initialize caches and get hash dict
             RefreshVertexCache();
             RefreshFloatCache();
+            RecalculateBounds();
             var textureHashDictionary = GenerateTextureHashDictionary();
 
             //write file

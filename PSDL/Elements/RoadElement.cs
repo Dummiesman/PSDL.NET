@@ -42,10 +42,8 @@ namespace PSDL.Elements
             {
                 return 0;
             }
-            else
-            {
-                return segmentCount;
-            }
+
+            return segmentCount;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
@@ -54,13 +52,10 @@ namespace PSDL.Elements
             if (numSections == 0)
                 numSections = reader.ReadUInt16();
 
-            for (var i = 0; i < numSections; i++)
+            for (var i = 0; i < numSections * 4; i++)
             {
-                for (var j = 0; j < 4; j++)
-                {
-                    ushort vertexIndex = reader.ReadUInt16();
-                    Vertices.Add(parent.Vertices[vertexIndex]);
-                }
+                var vertexIndex = reader.ReadUInt16();
+                Vertices.Add(parent.Vertices[vertexIndex]);
             }
         }
 
@@ -109,7 +104,7 @@ namespace PSDL.Elements
         //Constructors
         public RoadElement(string roadTexture, string sidewalkTexture, string LODTexture, Vertex[] vertices)
         {
-            Textures = new string[] { roadTexture, sidewalkTexture, LODTexture };
+            Textures = new []{roadTexture, sidewalkTexture, LODTexture};
             Vertices.AddRange(vertices);
         }
 

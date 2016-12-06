@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Linq;
 using System.Text;
 
 
@@ -57,10 +57,10 @@ namespace PSDL.Elements
         }
 
         //Constructors
-        public CrosswalkElement(string texture, Vertex[] vertices)
+        public CrosswalkElement(string texture, IEnumerable<Vertex> vertices)
         {
             Textures = new string[] { texture };
-            this.Vertices = vertices;
+            Vertices = vertices.ToArray();
         }
 
         public CrosswalkElement()

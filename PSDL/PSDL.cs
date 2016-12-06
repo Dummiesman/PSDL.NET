@@ -86,6 +86,16 @@ namespace PSDL
         {
             return new Vertex(vtx.x * amount, vtx.y * amount, vtx.z * amount);
         }
+
+        public static Vertex operator /(Vertex v1, Vertex v2)
+        {
+            return new Vertex(v1.x / v2.x, v1.y / v2.y, v1.z / v2.z);
+        }
+
+        public static Vertex operator /(Vertex vtx, float amount)
+        {
+            return new Vertex(vtx.x / amount, vtx.y / amount, vtx.z / amount);
+        }
     }
 
     public class PerimeterPoint

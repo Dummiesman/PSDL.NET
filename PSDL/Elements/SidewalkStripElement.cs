@@ -121,9 +121,9 @@ namespace PSDL.Elements
         }
 
         //Constructurs
-        public SidewalkStripElement(string texture, Vertex[] vertices)
+        public SidewalkStripElement(string texture, IEnumerable<Vertex> vertices)
         {
-            Textures = new string[] { texture };
+            Textures = new []{ texture };
             Vertices.AddRange(vertices);
         }
 

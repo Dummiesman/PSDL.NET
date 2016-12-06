@@ -78,10 +78,10 @@ namespace PSDL.Elements
         }
 
         //Constructors
-        public TriangleFanElement(string texture, Vertex[] vertices)
+        public TriangleFanElement(string texture, IEnumerable<Vertex> vertices)
         {
             Textures = new string[] { texture };
-            this.Vertices.AddRange(vertices);
+            Vertices.AddRange(vertices);
         }
 
         public TriangleFanElement()
