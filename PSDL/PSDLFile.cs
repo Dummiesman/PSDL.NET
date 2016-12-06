@@ -246,7 +246,6 @@ namespace PSDL
                     var u5 = new float[u3 + u4];
                     for (var j = 0; j < u5.Length; j++)
                     {
-
                         u5[j] = r.ReadSingle();
                     }
 
@@ -307,14 +306,11 @@ namespace PSDL
         }
 
 
-        private void BuildVertexCache(IEnumerable<Vertex> vertices)
+        private void BuildVertexCache(IEnumerable<Vertex> vertices, ref HashSet<Vertex> hashList)
         {
             foreach (var v in vertices)
             {
-                if (!Vertices.Contains(v))
-                {
-                    Vertices.Add(v);
-                }
+                hashList.Add(v);
             }
         }
 
@@ -334,71 +330,87 @@ namespace PSDL
         private void RefreshVertexCache()
         {
             Vertices.Clear();
+            var hashVertexList = new HashSet<Vertex>();
+
             foreach (var rm in Rooms)
             {
                 foreach (var pp in rm.Perimeter)
                 {
-                    if (!Vertices.Contains(pp.Vertex))
-                    {
-                        Vertices.Add(pp.Vertex);
-                    }
+                    hashVertexList.Add(pp.Vertex);
                 }
 
                 foreach (var el in rm.Elements)
                 {
-                    if (el is CrosswalkElement)
+                    var type = (ElementType)el.GetElementType();
+                    switch (type)
                     {
-                        var ce = (CrosswalkElement)el;
-                        BuildVertexCache(ce.Vertices);
+                        case ElementType.Road:
+                        {
+                            var cacheElement = (RoadElement) el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.TriangleFan:
+                        case ElementType.CulledTriangleFan:
+                        {
+                            var cacheElement = (TriangleFanElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.Crosswalk:
+                        {
+                            var cacheElement = (CrosswalkElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.DividedRoad:                            
+                        {
+                            var cacheElement = (DividedRoadElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.FacadeBound:
+                        {
+                            var cacheElement = (FacadeBoundElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.Facade:
+                        {
+                            var cacheElement = (FacadeElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.RoofTriangleFan:
+                        {
+                            var cacheElement = (RoofTriangleFanElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.Walkway:
+                        {
+                            var cacheElement = (WalkwayElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.Sliver:
+                        {
+                            var cacheElement = (SliverElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
+                        case ElementType.SidewalkStrip:
+                        {
+                            var cacheElement = (SidewalkStripElement)el;
+                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
+                            break;
+                        }
                     }
-                    else if (el is DividedRoadElement)
-                    {
-                        var dre = (DividedRoadElement)el;
-                        BuildVertexCache(dre.Vertices);
-                    }
-                    else if (el is FacadeBoundElement)
-                    {
-                        var fb = (FacadeBoundElement)el;
-                        BuildVertexCache(fb.Vertices);
-                    }
-                    else if (el is FacadeElement)
-                    {
-                        var fc = (FacadeElement)el;
-                        BuildVertexCache(fc.Vertices);
-                    }
-                    else if (el is RoadElement)
-                    {
-                        var re = (RoadElement)el;
-                        BuildVertexCache(re.Vertices);
-                    }
-                    else if (el is RoofTriangleFanElement)
-                    {
-                        var rtf = (RoofTriangleFanElement)el;
-                        BuildVertexCache(rtf.Vertices);
-                    }
-                    else if (el is SidewalkStripElement)
-                    {
-                        var sse = (SidewalkStripElement)el;
-                        BuildVertexCache(sse.Vertices);
-                    }
-                    else if (el is SliverElement)
-                    {
-                        var se = (SliverElement)el;
-                        BuildVertexCache(se.Vertices);
-                    }
-                    else if (el is TriangleFanElement || el is CulledTriangleFanElement)
-                    {
-                        var tfe = (TriangleFanElement)el;
-                        BuildVertexCache(tfe.Vertices);
-                    }
-                    else if (el is WalkwayElement)
-                    {
-                        var ww = (WalkwayElement)el;
-                        BuildVertexCache(ww.Vertices);
-                    }
-
                 }
             }
+
+            Vertices.AddRange(hashVertexList);
+            hashVertexList.Clear();
         }
 
         private Dictionary<string, int> GenerateTextureHashDictionary()
@@ -456,53 +468,47 @@ namespace PSDL
         {
             //build floats cache
             Floats.Clear();
+            var hashFloatList = new HashSet<float>();
+
             foreach (var rm in Rooms)
             {
                 foreach (var el in rm.Elements)
                 {
-                    if (el is FacadeBoundElement)
+                    var type = (ElementType) el.GetElementType();
+                    switch (type)
                     {
-                        var fb = (FacadeBoundElement)el;
-                        if (!Floats.Contains(fb.Height))
+                        case ElementType.FacadeBound:
                         {
-                            Floats.Add(fb.Height);
+                            var cacheElement = (FacadeBoundElement) el;
+                            hashFloatList.Add(cacheElement.Height);
+                            break;
                         }
-                    }
-                    else if (el is RoofTriangleFanElement)
-                    {
-                        var rtf = (RoofTriangleFanElement)el;
-                        if (!Floats.Contains(rtf.Height))
+                        case ElementType.RoofTriangleFan:
                         {
-                            Floats.Add(rtf.Height);
+                            var cacheElement = (RoofTriangleFanElement)el;
+                            hashFloatList.Add(cacheElement.Height);
+                            break;
                         }
-                    }
-                    else if (el is FacadeElement)
-                    {
-                        var fe = (FacadeElement)el;
-                        if (!Floats.Contains(fe.BottomHeight))
+                        case ElementType.Facade:
                         {
-                            Floats.Add(fe.BottomHeight);
+                            var cacheElement = (FacadeElement)el;
+                            hashFloatList.Add(cacheElement.BottomHeight);
+                            hashFloatList.Add(cacheElement.TopHeight);
+                            break;
                         }
-                        if (!Floats.Contains(fe.TopHeight))
+                        case ElementType.Sliver:
                         {
-                            Floats.Add(fe.TopHeight);
-                        }
-                    }
-                    else if (el is SliverElement)
-                    {
-                        var sl = (SliverElement)el;
-                        if (!Floats.Contains(sl.TextureScale))
-                        {
-                            Floats.Add(sl.TextureScale);
-                        }
-                        if (!Floats.Contains(sl.Height))
-                        {
-                            Floats.Add(sl.Height);
+                            var cacheElement = (SliverElement)el;
+                            hashFloatList.Add(cacheElement.TextureScale);
+                            hashFloatList.Add(cacheElement.Height);
+                            break;
                         }
                     }
                 }
             }
 
+            Floats.AddRange(hashFloatList);
+            hashFloatList.Clear();
         }
 
         public void RecalculateBounds()
@@ -658,7 +664,7 @@ namespace PSDL
                                 }
                                 textureIndex += textureOffset;
 
-
+                                textureIndex += 1;
                                 int textureIndexByte = textureIndex % 256;
                                 int textureIndexSubtype = (int)Math.Floor((float)textureIndex / 256);
 
@@ -666,7 +672,7 @@ namespace PSDL
 
                                 w.Write(textureHeader);
 
-                                w.Write((ushort)(textureIndexByte + 1));
+                                w.Write((ushort)(textureIndexByte));
                             }
                             else
                             {
@@ -722,46 +728,35 @@ namespace PSDL
 
                 w.Write(dimensionsRadius);
 
-                //TODO : write ai roads, crashes the game :c
-                w.Write((uint)0);
-
-                /*
-                w.Write((uint)propPaths.Count);
-
-                for(int i=0; i < propPaths.Count; i++)
+                w.Write((uint)AIRoads.Count);
+                for(var i=0; i < AIRoads.Count; i++)
                 {
-                    PSDLPropPath path = propPaths[i];
-
-                    w.Write(path.unk1);
-                    w.Write(path.unk2);
-                    w.Write(path.unk3);
-                    w.Write(path.unk4);
-                    for(int j=0; j < path.unk5.Count; j++)
+                    var road = AIRoads[i];
+                    w.Write(road.Unknown1);
+                    w.Write(road.Unknown2);
+                    w.Write(road.Unknown3);
+                    w.Write(road.Unknown4);
+                    foreach (var f in road.Unknown5)
                     {
-                        w.Write(path.unk5[j]);
+                        w.Write(f);
                     }
-                    w.Write(path.unk6);
-                    
-                    for(int j=0; j < 4; j++)
+                    w.Write(road.Unknown6);
+                    foreach (var scr in road.StartCrossroads)
                     {
-                        w.Write((ushort)Vertices.IndexOf(path.startCrossroads[j]));
+                        w.Write((ushort)Vertices.IndexOf(scr));
                     }
-                    for (int j = 0; j < 4; j++)
+                    foreach (var ecr in road.EndCrossroads)
                     {
-                        w.Write((ushort)Vertices.IndexOf(path.endCrossroads[j]));
+                        w.Write((ushort)Vertices.IndexOf(ecr));
                     }
 
-                    w.Write((byte)path.roadRooms.Count);
-                    for(int j=0; j < path.roadRooms.Count; j++)
+                    w.Write((byte)road.Rooms.Count);
+                    foreach (var room in road.Rooms)
                     {
-                        w.Write((short)rooms.IndexOf(path.roadRooms[j]));
+                        w.Write((ushort)(Rooms.IndexOf(room) + 1));
                     }
                 }
-                */
-
-
             }
-
         }
 
         //Constructors

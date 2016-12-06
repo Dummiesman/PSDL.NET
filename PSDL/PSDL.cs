@@ -20,7 +20,24 @@ namespace PSDL
         Warp = 64,
         Instance = 128
     }
-    
+
+    public enum ElementType
+    {
+        Road,
+        SidewalkStrip,
+        Walkway,
+        Sliver,
+        Crosswalk,
+        CulledTriangleFan,
+        TriangleFan,
+        FacadeBound,
+        DividedRoad,
+        Tunnel,
+        Texture,
+        Facade,
+        RoofTriangleFan
+    }
+
     public class Vertex
     {
         public float x;
@@ -69,12 +86,12 @@ namespace PSDL
 
         public static Vertex operator -(Vertex v1, Vertex v2)
         {
-            return new Vertex(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+            return new Vertex(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
         }
 
         public static Vertex operator +(Vertex v1, Vertex v2)
         {
-            return new Vertex(v2.x + v1.x, v2.y + v1.y, v2.z + v1.z);
+            return new Vertex(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
         }
 
         public static Vertex operator *(Vertex v1, Vertex v2)

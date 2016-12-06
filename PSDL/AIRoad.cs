@@ -13,9 +13,9 @@ namespace PSDL
         public ushort Unknown6;
         public Vertex[] StartCrossroads;
         public Vertex[] EndCrossroads;
-        public List<Room> PathRooms;
+        public List<Room> Rooms;
 
-        public AIRoad(ushort u1, ushort u2, byte u3, byte u4, float[] u5, ushort u6, Vertex[] scr, Vertex[] ecr, Room[] crms)
+        public AIRoad(ushort u1, ushort u2, byte u3, byte u4, float[] u5, ushort u6, Vertex[] scr, Vertex[] ecr, IEnumerable<Room> rooms)
         {
             Unknown1 = u1;
             Unknown2 = u2;
@@ -29,8 +29,8 @@ namespace PSDL
             StartCrossroads = scr;
             EndCrossroads = ecr;
 
-            PathRooms = new List<Room>();
-            PathRooms.AddRange(crms);
+            Rooms = new List<Room>();
+            Rooms.AddRange(rooms);
         }
     }
 }

@@ -57,17 +57,17 @@ namespace PSDL.Elements
         public void DeleteSidewalk(bool moveRoadOutwards = false)
         {
             //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
-            for (var i = 0; i < Vertices.Count / 4; i += 4)
+            for (var i = 0; i < Vertices.Count; i += 4)
             {
                 if (!moveRoadOutwards)
                 {
                     Vertices[i] = Vertices[i + 1];
-                    Vertices[i + 2] = Vertices[i + 3];
+                    Vertices[i + 3] = Vertices[i + 2];
                 }
                 else
                 {
                     Vertices[i + 1] = Vertices[i];
-                    Vertices[i + 3] = Vertices[i + 2];
+                    Vertices[i + 2] = Vertices[i + 3];
                 }
             }
         }
@@ -84,6 +84,11 @@ namespace PSDL.Elements
         {
             Textures = new []{roadTexture, sidewalkTexture, LODTexture};
             Vertices.AddRange(vertices);
+        }
+
+        public RoadElement(string roadTexture, string sidewalkTexture, string LODTexture)
+        {
+            Textures = new[] { roadTexture, sidewalkTexture, LODTexture };
         }
 
         public RoadElement()

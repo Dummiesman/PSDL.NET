@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 
-using System.Text;
-
-
 
 namespace PSDL.Elements
 {
@@ -38,7 +35,7 @@ namespace PSDL.Elements
             return 4;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 8;
         }
