@@ -10,33 +10,36 @@ namespace PSDL.Elements
 {
     public class TunnelElement : IPSDLElement
     {
-        public bool LeftSide;
-        public bool RightSide;
-        public bool IsWall;
-        public bool FlatCeiling;
-        public bool ClosedStartLeft;
-        public bool ClosedEndLeft;
-        public bool ClosedStartRight;
-        public bool ClosedEndRight;
-
-        public bool CurvedCeiling;
-        public bool OffsetStartLeft;
-        public bool OffsetEndLeft;
-        public bool OffsetStartRight;
-        public bool OffsetEndRight;
-        public bool CurvedSides;
-        public bool Culled;
+        [Flags]
+        public enum TunnelFlags : ushort
+        {
+            LeftSide = 1,
+            RightSide = 2,
+            IsWall = 4,
+            FlatCeiling = 8,
+            ClosedStartLeft = 16,
+            ClosedEndLeft = 32,
+            ClosedStartRight = 64,
+            ClosedEndRight = 128,
+            CurvedCeiling = 256,
+            OffsetStartLeft = 512,
+            OffsetEndLeft = 1024,
+            OffsetStartRight = 2048,
+            OffsetEndRight = 4096,
+            CurvedSides = 8192,
+            Culled = 16384
+        }
 
         public bool IsJunctionTunnel;
         public List<bool> JunctionWalls = new List<bool>();
         public ushort JunctionCeilingBits;
 
+        public TunnelFlags Flags;
+
         public byte Height1;
         public byte Height2;
         public byte Unknown1;
         public byte Unknown2;
-
-
 
         private string[] _textures;
         public string[] Textures
@@ -78,25 +81,7 @@ namespace PSDL.Elements
                 junctionShorts = reader.ReadUInt16();
             }
 
-            var flagsA = reader.ReadByte();
-            LeftSide = (flagsA & 1) >= 1;
-            RightSide = (flagsA & 2) >= 1;
-            IsWall = (flagsA & 4) >= 1;
-            FlatCeiling = (flagsA & 8) >= 1;
-            ClosedStartLeft = (flagsA & 16) >= 1;
-            ClosedEndLeft = (flagsA & 32) >= 1;
-            ClosedStartRight = (flagsA & 64) >= 1;
-            ClosedEndRight = (flagsA & 128) >= 1;
-
-            var flagsB = reader.ReadByte();
-            CurvedCeiling = (flagsB & 1) >= 1;
-            OffsetStartLeft = (flagsB & 2) >= 1;
-            OffsetEndLeft = (flagsB & 4) >= 1;
-            OffsetStartRight = (flagsB & 8) >= 1;
-            OffsetEndRight = (flagsB & 16) >= 1;
-            CurvedSides = (flagsB & 32) >= 1;
-            Culled = (flagsB & 64) >= 1;
-
+            Flags = (TunnelFlags) reader.ReadUInt16();
             Unknown1 = reader.ReadByte();
             Height1 = reader.ReadByte();
             Unknown2 = reader.ReadByte();
@@ -122,28 +107,7 @@ namespace PSDL.Elements
                 writer.Write((ushort)((JunctionWalls.Count >> 4) + 4));
             }
 
-            byte flagsA = 0;
-            byte flagsB = 0;
-
-            if (LeftSide) { flagsA |= 1; }
-            if (RightSide) { flagsA |= 2; }
-            if (IsWall) { flagsA |= 4; }
-            if (FlatCeiling) { flagsA |= 8; }
-            if (ClosedStartLeft) { flagsA |= 16; }
-            if (ClosedEndLeft) { flagsA |= 32; }
-            if (ClosedStartRight) { flagsA |= 64; }
-            if (ClosedEndRight) { flagsA |= 128; }
-
-            if (CurvedCeiling) { flagsB |= 1; }
-            if (OffsetStartLeft) { flagsB |= 2; }
-            if (OffsetEndLeft) { flagsB |= 4; }
-            if (OffsetStartRight) { flagsB |= 8; }
-            if (OffsetEndRight) { flagsB |= 16; }
-            if (CurvedSides) { flagsB |= 32; }
-            if (Culled) { flagsB |= 64; }
-
-            writer.Write(flagsA);
-            writer.Write(flagsB);
+            writer.Write((ushort)Flags);
             writer.Write(Unknown1);
             writer.Write(Height1);
             writer.Write(Unknown2);
@@ -167,15 +131,15 @@ namespace PSDL.Elements
             }
         }
 
-        //Constructors (TODO : Make some sort of TunnelFlags structure cause this is just crap)
-        public TunnelElement(string leftWallTexture, string rightWallTexture, string ceilingTexture, string outerRightTexture, string outerLeftTexture, string undersideTexture, bool isJunction = false, params bool[] visibleWalls)
+        //Constructors
+        public TunnelElement(string leftWallTexture, string rightWallTexture, string ceilingTexture, string outerRightTexture, string outerLeftTexture, string undersideTexture, TunnelFlags flags, bool isJunction = false, params bool[] visibleWalls)
         {
             Textures = new string[] { leftWallTexture, rightWallTexture, ceilingTexture, outerRightTexture, outerLeftTexture, undersideTexture };
             IsJunctionTunnel = isJunction;
+            Flags = flags;
 
             if (isJunction)
                 JunctionWalls.AddRange(visibleWalls);
-
         }
 
         public TunnelElement()
