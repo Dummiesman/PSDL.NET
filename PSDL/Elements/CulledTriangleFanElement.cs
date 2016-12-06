@@ -17,7 +17,7 @@ namespace PSDL.Elements
         }
 
         //Constructors
-        public CulledTriangleFanElement(string texture, Vertex[] vertices)
+        public CulledTriangleFanElement(string texture, IEnumerable<Vertex> vertices)
         {
             Textures = new string[] { texture };
             this.Vertices.AddRange(vertices);

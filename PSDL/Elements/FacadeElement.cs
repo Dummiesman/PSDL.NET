@@ -68,7 +68,7 @@ namespace PSDL.Elements
         public FacadeElement(string texture, float bottomHeight, float topHeight, short uTiling, short vTiling, Vertex leftVertex, Vertex rightVertex)
         {
             Textures = new string[] { texture };
-            this.BottomHeight = bottomHeight;
+            BottomHeight = bottomHeight;
             TopHeight = topHeight;
             UTiling = uTiling;
             VTiling = vTiling;

@@ -102,7 +102,7 @@ namespace PSDL.Elements
         }
 
         //Constructors
-        public RoadElement(string roadTexture, string sidewalkTexture, string LODTexture, Vertex[] vertices)
+        public RoadElement(string roadTexture, string sidewalkTexture, string LODTexture, IEnumerable<Vertex> vertices)
         {
             Textures = new []{roadTexture, sidewalkTexture, LODTexture};
             Vertices.AddRange(vertices);
