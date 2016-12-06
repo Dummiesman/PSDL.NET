@@ -12,27 +12,14 @@ namespace PSDL.Elements
         public Vertex[] Vertices = new Vertex[2];
         public float Height;
         public float TextureScale;
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
             return 1;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 3;
         }
@@ -61,7 +48,7 @@ namespace PSDL.Elements
         //Constructors
         public SliverElement(string texture, float height, float textureScale, Vertex leftVertex, Vertex rightVertex)
         {
-            Textures = new string[] { texture };
+            Textures = new [] { texture };
             Height = height;
             TextureScale = textureScale;
             Vertices[0] = leftVertex;

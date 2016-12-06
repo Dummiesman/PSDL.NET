@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 
 namespace PSDL.Elements
@@ -10,20 +8,7 @@ namespace PSDL.Elements
     public class CrosswalkElement : IPSDLElement
     {
         public Vertex[] Vertices = new Vertex[4];
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
@@ -59,7 +44,7 @@ namespace PSDL.Elements
         //Constructors
         public CrosswalkElement(string texture, IEnumerable<Vertex> vertices)
         {
-            Textures = new string[] { texture };
+            Textures = new [] { texture };
             Vertices = vertices.ToArray();
         }
 

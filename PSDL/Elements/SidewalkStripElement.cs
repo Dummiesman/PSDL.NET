@@ -12,27 +12,14 @@ namespace PSDL.Elements
         public List<Vertex> Vertices = new List<Vertex>();
         public bool IsStartCap;
         public bool IsEndCap;
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
             return 1;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 1;
         }
@@ -45,12 +32,8 @@ namespace PSDL.Elements
                 bias = 1;
             }
 
-            if (((Vertices.Count / 2) + bias) > Constants.MaxSubtype)
-            {
-                return 0;
-            }
-
-            return (Vertices.Count / 2) + bias;
+            var calculatedSubtype = (Vertices.Count/2) + bias;
+            return (calculatedSubtype > Constants.MaxSubtype) ? 0 : calculatedSubtype;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)

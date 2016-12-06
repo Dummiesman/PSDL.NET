@@ -11,27 +11,14 @@ namespace PSDL.Elements
     {
         public List<Vertex> Vertices = new List<Vertex>();
         public float Height;
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
             return 1;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 12;
         }
@@ -39,12 +26,7 @@ namespace PSDL.Elements
         public int GetElementSubType()
         {
             var vcount = Vertices.Count - 1;
-            if (vcount > Constants.MaxSubtype)
-            {
-                return 0;
-            }
-
-            return vcount;
+            return (vcount > Constants.MaxSubtype) ? 0 : vcount;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
@@ -57,7 +39,7 @@ namespace PSDL.Elements
 
             for (var i = 0; i < numSections + 1; i++)
             {
-                ushort vertexIndex = reader.ReadUInt16();
+                var vertexIndex = reader.ReadUInt16();
                 Vertices.Add(parent.Vertices[vertexIndex]);
             }
         }
@@ -65,7 +47,7 @@ namespace PSDL.Elements
         public void Save(ref BinaryWriter writer, PSDLFile parent)
         {
             //write count if applicable
-            int subtype = GetElementSubType();
+            var subtype = GetElementSubType();
             if (subtype == 0)
             {
                 writer.Write((ushort)(Vertices.Count - 1));

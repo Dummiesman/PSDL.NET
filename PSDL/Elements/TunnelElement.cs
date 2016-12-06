@@ -41,35 +41,21 @@ namespace PSDL.Elements
         public byte Unknown1;
         public byte Unknown2;
 
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
             return 6;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 9;
         }
 
         public int GetElementSubType()
         {
-            if (IsJunctionTunnel)
-                return 0;
-            return 3;
+            return (IsJunctionTunnel) ? 0 : 3;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
@@ -92,7 +78,7 @@ namespace PSDL.Elements
                 JunctionCeilingBits = reader.ReadUInt16();
 
                 var ba = new BitArray(reader.ReadBytes((junctionShorts - 4) * 2));
-                for (int i = 0; i < ba.Count; i++)
+                for (var i = 0; i < ba.Count; i++)
                 {
                     JunctionWalls.Add(ba.Get(i));
                 }

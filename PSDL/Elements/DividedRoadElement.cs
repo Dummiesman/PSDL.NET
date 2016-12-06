@@ -31,19 +31,7 @@ namespace PSDL.Elements
         public byte Flags;
         public string DividerTexture;
 
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
@@ -58,12 +46,7 @@ namespace PSDL.Elements
         public int GetElementSubType()
         {
             var segmentCount = Vertices.Count / 6;
-            if (segmentCount > Constants.MaxSubtype)
-            {
-                return 0;
-            }
-
-            return segmentCount;
+            return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
@@ -79,13 +62,12 @@ namespace PSDL.Elements
             DividerTexture = parent.GetTextureFromCache(reader.ReadByte()); //texture for divider what the fuck Angel!?
             Value = reader.ReadUInt16();
 
-            for (var i = 0; i < numSections; i++)
+            for (var i = 0; i < numSections * 6; i++)
             {
-                for (var j = 0; j < 6; j++)
-                {
-                    ushort vertexIndex = reader.ReadUInt16();
-                    Vertices.Add(parent.Vertices[vertexIndex]);
-                }
+
+                var vertexIndex = reader.ReadUInt16();
+                Vertices.Add(parent.Vertices[vertexIndex]);
+
             }
         }
 

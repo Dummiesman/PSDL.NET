@@ -11,19 +11,7 @@ namespace PSDL.Elements
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
@@ -38,14 +26,7 @@ namespace PSDL.Elements
         public int GetElementSubType()
         {
             var vcount = Vertices.Count - 2;
-            if (vcount > Constants.MaxSubtype)
-            {
-                return 0;
-            }
-            else
-            {
-                return vcount;
-            }
+            return (vcount > Constants.MaxSubtype) ? 0 : vcount;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
@@ -64,7 +45,7 @@ namespace PSDL.Elements
         public void Save(ref BinaryWriter writer, PSDLFile parent)
         {
             //write count if applicable
-            int subtype = GetElementSubType();
+            var subtype = GetElementSubType();
             if (subtype == 0)
             {
                 writer.Write((ushort)(Vertices.Count - 2));
@@ -80,7 +61,7 @@ namespace PSDL.Elements
         //Constructors
         public TriangleFanElement(string texture, IEnumerable<Vertex> vertices)
         {
-            Textures = new string[] { texture };
+            Textures = new [] { texture };
             Vertices.AddRange(vertices);
         }
 

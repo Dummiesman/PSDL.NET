@@ -12,20 +12,7 @@ namespace PSDL.Elements
         public Vertex[] Vertices = new Vertex[2];
         public ushort SunAngle;
         public float Height;
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {

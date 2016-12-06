@@ -10,27 +10,14 @@ namespace PSDL.Elements
     public class WalkwayElement : IPSDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
             return 1;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 2;
         }
@@ -38,13 +25,7 @@ namespace PSDL.Elements
         public int GetElementSubType()
         {
             var segmentCount = Vertices.Count / 2;
-            if (segmentCount > Constants.MaxSubtype)
-            {
-                return 0;
-            }
-
-            return segmentCount;
-
+            return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)

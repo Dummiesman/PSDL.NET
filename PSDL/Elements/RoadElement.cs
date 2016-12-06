@@ -10,40 +10,22 @@ namespace PSDL.Elements
     public class RoadElement : IPSDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
             return 3;
         }
 
-        int IPSDLElement.GetElementType()
+        public int GetElementType()
         {
             return 0;
         }
 
         public int GetElementSubType()
         {
-            int segmentCount = Vertices.Count / 4;
-            if (segmentCount > Constants.MaxSubtype)
-            {
-                return 0;
-            }
-
-            return segmentCount;
+            var segmentCount = Vertices.Count / 4;
+            return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
         }
 
         public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
@@ -79,7 +61,7 @@ namespace PSDL.Elements
         public void DeleteSidewalk(bool moveRoadOutwards = false)
         {
             //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
-            for (int i = 0; i < Vertices.Count / 4; i += 4)
+            for (var i = 0; i < Vertices.Count / 4; i += 4)
             {
                 if (!moveRoadOutwards)
                 {

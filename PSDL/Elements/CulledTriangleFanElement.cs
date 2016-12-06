@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-
-using System.Text;
-
+﻿using System.Collections.Generic;
 
 namespace PSDL.Elements
 {
@@ -19,8 +14,8 @@ namespace PSDL.Elements
         //Constructors
         public CulledTriangleFanElement(string texture, IEnumerable<Vertex> vertices)
         {
-            Textures = new string[] { texture };
-            this.Vertices.AddRange(vertices);
+            Textures = new [] { texture };
+            Vertices.AddRange(vertices);
         }
 
         public CulledTriangleFanElement()

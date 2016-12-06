@@ -14,20 +14,7 @@ namespace PSDL.Elements
         public float TopHeight;
         public short UTiling;
         public short VTiling;
-
-        private string[] _textures;
-        public string[] Textures
-        {
-            get
-            {
-                return _textures;
-            }
-
-            set
-            {
-                _textures = value;
-            }
-        }
+        public string[] Textures { get; set; }
 
         public int GetRequiredTextureCount()
         {
@@ -67,7 +54,7 @@ namespace PSDL.Elements
         //Constructors
         public FacadeElement(string texture, float bottomHeight, float topHeight, short uTiling, short vTiling, Vertex leftVertex, Vertex rightVertex)
         {
-            Textures = new string[] { texture };
+            Textures = new [] { texture };
             BottomHeight = bottomHeight;
             TopHeight = topHeight;
             UTiling = uTiling;

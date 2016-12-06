@@ -582,7 +582,7 @@ namespace PSDL
 
                 //Textures
                 w.Write((uint)_textures.Count + 1);
-                for (int i = 0; i < _textures.Count; i++)
+                for (var i = 0; i < _textures.Count; i++)
                 {
                 
                     if (_textures[i].Length > 0)

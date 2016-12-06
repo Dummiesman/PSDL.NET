@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 
 using System.Text;
@@ -12,7 +13,19 @@ namespace PSDL
         public List<IPSDLElement> Elements;
         public RoomFlags Flags;
         public byte PropRule;
-        
+
+        public IEnumerable<Vertex> GetPerimeterVertices()
+        {
+            var vertices = new Vertex[Perimeter.Count];
+
+            for (var i = 0; i < Perimeter.Count; i++)
+            {
+                vertices[i] = Perimeter[i].Vertex;
+            }
+
+            return vertices;
+        }
+
         private void BasicCTOR()
         {
             Elements = new List<IPSDLElement>();
