@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 
 
 namespace PSDL
@@ -19,20 +17,26 @@ namespace PSDL
         public List<AIRoad> AIRoads;
 
         private string _filePath;
-        private bool _elementMapBuilt = false;
+        private bool _elementMapBuilt;
         private Dictionary<int, Type> _elementMap;
 
-        public Vertex dimensionsMin;
-        public Vertex dimensionsMax;
-        public Vertex dimensionsCenter;
-        public float dimensionsRadius;
+        public Vertex DimensionsMin;
+        public Vertex DimensionsMax;
+        public Vertex DimensionsCenter;
+        public float DimensionsRadius;
+
+        //API for elements to use (maybe there's a better way?)
+        public int GetTextureIndex(string tex)
+        {
+            return _textures.IndexOf(tex);
+        }
 
         public string GetTextureFromCache(int id)
         {
             return _textures[id];
         }
 
-        public void RebuildElementMap()
+        private void RebuildElementMap()
         {
             _elementMapBuilt = true;
             _elementMap = new Dictionary<int, Type>();
@@ -44,7 +48,7 @@ namespace PSDL
             }
         }
 
-        public void Load()
+        private void Load()
         {
             if (!_elementMapBuilt)
                 RebuildElementMap();
@@ -133,8 +137,8 @@ namespace PSDL
                     {
                         //extract attribute Type and subtype
                         var att = r.ReadUInt16();
-                        var type = att >> 3 & 15;
-                        var subtype = att & 7;
+                        int type = att >> 3 & 15;
+                        int subtype = att & 7;
 
                         if (type != 10)
                         {
@@ -142,24 +146,29 @@ namespace PSDL
 
                             //some Elements require a texture offset
                             var textureOffset = 0;
-                            if (loader is CrosswalkElement)
+                            var loaderType = (ElementType)loader.GetElementType();
+                            switch (loaderType)
                             {
-                                textureOffset = 2;
-                            }
-                            else if (loader is SidewalkStripElement)
-                            {
-                                textureOffset = 1;
+                                case ElementType.Crosswalk:
+                                    textureOffset = 2;
+                                    break;
+                                case ElementType.SidewalkStrip:
+                                    textureOffset = 1;
+                                    break;
                             }
 
-                            //set Textures
+                            //read data, setup textures
+                            loader.Read(ref r, subtype, this);
+
                             var requiredTextureCount = loader.GetRequiredTextureCount();
 
                             if (requiredTextureCount > 0)
                             {
                                 if (currentTextureId != 65535)
                                 {
-                                    //non null texture
+
                                     loader.Textures = _textures.GetRange((int)currentTextureId + textureOffset, requiredTextureCount).ToArray();
+       
                                 }
                                 else
                                 {
@@ -172,12 +181,7 @@ namespace PSDL
                                 }
                             }
 
-
-                            //set data
-                            //Console.WriteLine(loader.GetType().Name);
-                            loader.Read(ref r, subtype, this);
-
-                            //add to room
+                            //finally, add to room
                             roomElements.Add(loader);
                         }
                         else
@@ -189,7 +193,7 @@ namespace PSDL
                     }
 
                     //finally, store this room
-                    Rooms.Add(new Room(roomElements.ToArray(), perimPoints.ToArray()));
+                    Rooms.Add(new Room(roomElements, perimPoints));
 
                 }
 
@@ -227,10 +231,10 @@ namespace PSDL
                 }
 
                 //dimensions
-                dimensionsMin = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-                dimensionsMax = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-                dimensionsCenter = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-                dimensionsRadius = r.ReadSingle();
+                DimensionsMin = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+                DimensionsMax = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+                DimensionsCenter = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+                DimensionsRadius = r.ReadSingle();
 
                 //read prop paths         
                 var numAiRoads = r.ReadUInt32();
@@ -287,11 +291,6 @@ namespace PSDL
         }
 
         //useful saving functions
-        private bool ElementUsesNullTexture(IPSDLElement element)
-        {
-            return (element.Textures[0] == null || element.Textures == null);
-        }
-
         private string TextureHashString(string[] textures)
         {
             if (textures == null || textures[0] == null)
@@ -327,6 +326,8 @@ namespace PSDL
             return ret;
         }
 
+
+        //cache functions
         private void RefreshVertexCache()
         {
             Vertices.Clear();
@@ -334,79 +335,7 @@ namespace PSDL
 
             foreach (var rm in Rooms)
             {
-                foreach (var pp in rm.Perimeter)
-                {
-                    hashVertexList.Add(pp.Vertex);
-                }
-
-                foreach (var el in rm.Elements)
-                {
-                    var type = (ElementType)el.GetElementType();
-                    switch (type)
-                    {
-                        case ElementType.Road:
-                        {
-                            var cacheElement = (RoadElement) el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.TriangleFan:
-                        case ElementType.CulledTriangleFan:
-                        {
-                            var cacheElement = (TriangleFanElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.Crosswalk:
-                        {
-                            var cacheElement = (CrosswalkElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.DividedRoad:                            
-                        {
-                            var cacheElement = (DividedRoadElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.FacadeBound:
-                        {
-                            var cacheElement = (FacadeBoundElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.Facade:
-                        {
-                            var cacheElement = (FacadeElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.RoofTriangleFan:
-                        {
-                            var cacheElement = (RoofTriangleFanElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.Walkway:
-                        {
-                            var cacheElement = (WalkwayElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.Sliver:
-                        {
-                            var cacheElement = (SliverElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                        case ElementType.SidewalkStrip:
-                        {
-                            var cacheElement = (SidewalkStripElement)el;
-                            BuildVertexCache(cacheElement.Vertices, ref hashVertexList);
-                            break;
-                        }
-                    }
-                }
+                hashVertexList.UnionWith(rm.GatherVertices());
             }
 
             Vertices.AddRange(hashVertexList);
@@ -429,10 +358,17 @@ namespace PSDL
                     if (el is Elements.DividedRoadElement)
                     {
                         var dr = (DividedRoadElement)el;
-                        if (!_textures.Contains(dr.DividerTexture))
+                        var hash = TextureHashString(dr.DividerTextures);
+
+                        //weird invisble Textures
+                        if (hash == null)
+                            continue;
+
+                        if (!textureHashDictionary.ContainsKey(hash))
                         {
-                            textureHashDictionary[dr.DividerTexture + "|"] = _textures.Count;
-                            _textures.Add(dr.DividerTexture);
+                            textureHashDictionary[hash] = _textures.Count;
+                            dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
+                            _textures.AddRange(dr.DividerTextures);
                         }
                     }
                 }
@@ -472,39 +408,7 @@ namespace PSDL
 
             foreach (var rm in Rooms)
             {
-                foreach (var el in rm.Elements)
-                {
-                    var type = (ElementType) el.GetElementType();
-                    switch (type)
-                    {
-                        case ElementType.FacadeBound:
-                        {
-                            var cacheElement = (FacadeBoundElement) el;
-                            hashFloatList.Add(cacheElement.Height);
-                            break;
-                        }
-                        case ElementType.RoofTriangleFan:
-                        {
-                            var cacheElement = (RoofTriangleFanElement)el;
-                            hashFloatList.Add(cacheElement.Height);
-                            break;
-                        }
-                        case ElementType.Facade:
-                        {
-                            var cacheElement = (FacadeElement)el;
-                            hashFloatList.Add(cacheElement.BottomHeight);
-                            hashFloatList.Add(cacheElement.TopHeight);
-                            break;
-                        }
-                        case ElementType.Sliver:
-                        {
-                            var cacheElement = (SliverElement)el;
-                            hashFloatList.Add(cacheElement.TextureScale);
-                            hashFloatList.Add(cacheElement.Height);
-                            break;
-                        }
-                    }
-                }
+                hashFloatList.UnionWith(rm.GatherFloats());
             }
 
             Floats.AddRange(hashFloatList);
@@ -516,34 +420,34 @@ namespace PSDL
             var average = new Vertex(0, 0, 0);
             foreach (var vtx in Vertices)
             {
-                dimensionsMin.x = Math.Min(vtx.x, dimensionsMin.x);
-                dimensionsMin.y = Math.Min(vtx.y, dimensionsMin.y);
-                dimensionsMin.z = Math.Min(vtx.z, dimensionsMin.z);
-                dimensionsMax.x = Math.Max(vtx.x, dimensionsMax.x);
-                dimensionsMax.y = Math.Max(vtx.y, dimensionsMax.y);
-                dimensionsMax.z = Math.Max(vtx.z, dimensionsMax.z);
+                DimensionsMin.x = Math.Min(vtx.x, DimensionsMin.x);
+                DimensionsMin.y = Math.Min(vtx.y, DimensionsMin.y);
+                DimensionsMin.z = Math.Min(vtx.z, DimensionsMin.z);
+                DimensionsMax.x = Math.Max(vtx.x, DimensionsMax.x);
+                DimensionsMax.y = Math.Max(vtx.y, DimensionsMax.y);
+                DimensionsMax.z = Math.Max(vtx.z, DimensionsMax.z);
                 average += vtx;
             }
 
             average /= Vertices.Count;
-            dimensionsCenter = average;
+            DimensionsCenter = average;
 
             float radius = 0;
-            radius = dimensionsMax.x - dimensionsMin.x;
-            if (dimensionsMax.y - dimensionsMin.y > radius)
+            radius = DimensionsMax.x - DimensionsMin.x;
+            if (DimensionsMax.y - DimensionsMin.y > radius)
             {
-                radius = dimensionsMax.y - dimensionsMin.y;
+                radius = DimensionsMax.y - DimensionsMin.y;
             }
             else
             {
-                radius = dimensionsMax.z - dimensionsMin.z;
+                radius = DimensionsMax.z - DimensionsMin.z;
             }
-            dimensionsRadius = radius/2;
+            DimensionsRadius = radius/2;
         }
 
         public void ReSave()
         {
-            if (_filePath == null)
+            if (_filePath == null)  
                 throw new Exception("Can't save PSDL file without being constructed from a file path. Use SaveAs instead.");
 
             SaveAs(_filePath);
@@ -645,6 +549,7 @@ namespace PSDL
                         var el = rm.Elements[j];
                         var texHash = TextureHashString(el.Textures);
 
+                        //need a new texture statement?
                         if (lastTextureHash != texHash && !(el is FacadeBoundElement))
                         {
                             if (texHash != null)
@@ -714,19 +619,19 @@ namespace PSDL
                 }
 
                 //write dimensions
-                w.Write(dimensionsMin.x);
-                w.Write(dimensionsMin.y);
-                w.Write(dimensionsMin.z);
+                w.Write(DimensionsMin.x);
+                w.Write(DimensionsMin.y);
+                w.Write(DimensionsMin.z);
 
-                w.Write(dimensionsMax.x);
-                w.Write(dimensionsMax.y);
-                w.Write(dimensionsMax.z);
+                w.Write(DimensionsMax.x);
+                w.Write(DimensionsMax.y);
+                w.Write(DimensionsMax.z);
 
-                w.Write(dimensionsCenter.x);
-                w.Write(dimensionsCenter.y);
-                w.Write(dimensionsCenter.z);
+                w.Write(DimensionsCenter.x);
+                w.Write(DimensionsCenter.y);
+                w.Write(DimensionsCenter.z);
 
-                w.Write(dimensionsRadius);
+                w.Write(DimensionsRadius);
 
                 w.Write((uint)AIRoads.Count);
                 for(var i=0; i < AIRoads.Count; i++)

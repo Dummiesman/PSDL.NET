@@ -16,7 +16,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 2;
+            return (int)ElementType.Walkway;
         }
 
         public int GetElementSubType()

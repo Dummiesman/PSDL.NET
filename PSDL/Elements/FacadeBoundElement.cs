@@ -17,7 +17,7 @@ namespace PSDL.Elements
 
         int IPSDLElement.GetElementType()
         {
-            return 7;
+            return (int)ElementType.FacadeBound;
         }
 
         public int GetElementSubType()

@@ -19,7 +19,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 11;
+            return (int) ElementType.Facade;
         }
 
         public int GetElementSubType()

@@ -17,7 +17,7 @@ namespace PSDL.Elements
 
         int IPSDLElement.GetElementType()
         {
-            return 4;
+            return (int) ElementType.Crosswalk;
         }
 
         public int GetElementSubType()

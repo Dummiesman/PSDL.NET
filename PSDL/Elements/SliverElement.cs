@@ -17,7 +17,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 3;
+            return (int)ElementType.Sliver;
         }
 
         public int GetElementSubType()

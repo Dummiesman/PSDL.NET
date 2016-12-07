@@ -18,7 +18,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 1;
+            return (int)ElementType.SidewalkStrip;
         }
 
         public int GetElementSubType()

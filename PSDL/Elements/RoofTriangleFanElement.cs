@@ -17,7 +17,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 12;
+            return (int)ElementType.RoofTriangleFan;
         }
 
         public int GetElementSubType()

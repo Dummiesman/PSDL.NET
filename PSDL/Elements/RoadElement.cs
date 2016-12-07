@@ -15,7 +15,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 0;
+            return (int)ElementType.Road;
         }
 
         public int GetElementSubType()

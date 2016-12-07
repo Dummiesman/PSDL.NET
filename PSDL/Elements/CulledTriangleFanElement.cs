@@ -9,7 +9,7 @@ namespace PSDL.Elements
     {
         public override int GetElementType()
         {
-            return 5;
+            return (int)ElementType.CulledTriangleFan;
         }
 
         //Constructors

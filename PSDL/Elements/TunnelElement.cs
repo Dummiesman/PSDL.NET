@@ -48,7 +48,7 @@ namespace PSDL.Elements
 
         public int GetElementType()
         {
-            return 9;
+            return (int)ElementType.Tunnel;
         }
 
         public int GetElementSubType()
@@ -115,7 +115,7 @@ namespace PSDL.Elements
             }
         }
 
-        //Constructors
+        //Constructors TODO: Create static constructors such as CreateWall CreateTunnel CreateJunctionWall CreateJunctionTunnel, because this is crap
         public TunnelElement(string leftWallTexture, string rightWallTexture, string ceilingTexture, string outerRightTexture, string outerLeftTexture, string undersideTexture, TunnelFlags flags, bool isJunction = false, params bool[] visibleWalls)
         {
             Textures = new string[] { leftWallTexture, rightWallTexture, ceilingTexture, outerRightTexture, outerLeftTexture, undersideTexture };
