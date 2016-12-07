@@ -8,8 +8,8 @@ namespace PSDL
 {
     public interface IPSDLElement
     {
-        void Save(ref BinaryWriter writer, PSDLFile parent);
-        void Read(ref BinaryReader reader, int subtype, PSDLFile parent);
+        void Save(BinaryWriter writer, PSDLFile parent);
+        void Read(BinaryReader reader, int subtype, PSDLFile parent);
         string[] Textures { get; set; }
         int GetElementType();
         int GetElementSubType();

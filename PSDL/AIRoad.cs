@@ -7,27 +7,22 @@ namespace PSDL
     {
         public ushort Unknown1;
         public ushort Unknown2;
-        public byte Unknown3;
-        public byte Unknown4;
-        public List<float> Unknown5;
-        public ushort Unknown6;
-        public Vertex[] StartCrossroads;
-        public Vertex[] EndCrossroads;
+        public List<float> Unknown3;
+        public List<float> Unknown4;
+        public ushort Unknown5;
         public List<Room> Rooms;
 
-        public AIRoad(ushort u1, ushort u2, byte u3, byte u4, float[] u5, ushort u6, Vertex[] scr, Vertex[] ecr, IEnumerable<Room> rooms)
+        public AIRoad(ushort u1, ushort u2, IEnumerable<float> u3, IEnumerable<float> u4, ushort u5, IEnumerable<Room> rooms)
         {
             Unknown1 = u1;
             Unknown2 = u2;
-            Unknown3 = u3;
-            Unknown4 = u4;
-            Unknown6 = u6;
+            Unknown5 = u5;
 
-            Unknown5 = new List<float>();
-            Unknown5.AddRange(u5);
+            Unknown3 = new List<float>();
+            Unknown3.AddRange(u3);
 
-            StartCrossroads = scr;
-            EndCrossroads = ecr;
+            Unknown4 = new List<float>();
+            Unknown3.AddRange(u4);
 
             Rooms = new List<Room>();
             Rooms.AddRange(rooms);

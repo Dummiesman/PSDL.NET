@@ -7,7 +7,7 @@ namespace PSDL.Elements
 {
     public class DividedRoadElement : IPSDLElement
     {
-        public enum DividedRoadType : byte
+        public enum DividerType : byte
         {
             Invisible = 0,
             Flat = 1,
@@ -16,7 +16,7 @@ namespace PSDL.Elements
         }
 
         [Flags]
-        public enum DividedRoadFlags : byte
+        public enum DividerFlags : byte
         {
             ClosedEnd = 32,
             ClosedStart = 16,
@@ -24,8 +24,8 @@ namespace PSDL.Elements
 
         public List<Vertex> Vertices = new List<Vertex>();
         public ushort Value;
-        public byte Type;
-        public byte Flags;
+        public DividerType Type;
+        public DividerFlags Flags;
         public byte DividerTexture;
 
         public string[] Textures { get; set; }
@@ -47,7 +47,7 @@ namespace PSDL.Elements
             return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
         }
 
-        public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
+        public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
             var numSections = (ushort)subtype;
             if (numSections == 0)
@@ -55,8 +55,8 @@ namespace PSDL.Elements
 
             //Console.WriteLine("DIVROAD FLAGTYPE @ " + reader.BaseStream.Position.ToString());
             var flagType = reader.ReadByte();
-            Flags = (byte)(flagType >> 2);
-            Type = (byte)(flagType & 3);
+            Flags = (DividerFlags)(flagType >> 2);
+            Type = (DividerType)(flagType & 3);
 
             DividerTexture = reader.ReadByte(); //texture for divider what the fuck Angel!?
             DividerTextures = new[]
@@ -76,7 +76,7 @@ namespace PSDL.Elements
             }
         }
 
-        public void Save(ref BinaryWriter writer, PSDLFile parent)
+        public void Save(BinaryWriter writer, PSDLFile parent)
         {
 
             //write count if applicable
@@ -86,7 +86,7 @@ namespace PSDL.Elements
                 writer.Write((ushort)(Vertices.Count / 6));
             }
 
-            writer.Write((byte)((byte)(Flags << 2) | Type));
+            writer.Write((byte)(((byte)Flags << 2) | (byte)Type));
             writer.Write(DividerTexture);
             writer.Write(Value);
 

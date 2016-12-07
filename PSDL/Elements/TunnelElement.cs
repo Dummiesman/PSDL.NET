@@ -56,7 +56,7 @@ namespace PSDL.Elements
             return (IsJunctionTunnel) ? 0 : 3;
         }
 
-        public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
+        public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
             ushort junctionShorts = 0;
             if (subtype == 0)
@@ -84,7 +84,7 @@ namespace PSDL.Elements
 
         }
 
-        public void Save(ref BinaryWriter writer, PSDLFile parent)
+        public void Save(BinaryWriter writer, PSDLFile parent)
         {
             if (IsJunctionTunnel)
             {

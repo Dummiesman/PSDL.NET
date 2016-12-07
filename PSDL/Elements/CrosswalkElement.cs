@@ -25,7 +25,7 @@ namespace PSDL.Elements
             return 4;
         }
 
-        public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
+        public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
             for (var i = 0; i < 4; i++)
             {
@@ -33,7 +33,7 @@ namespace PSDL.Elements
             }
         }
 
-        public void Save(ref BinaryWriter writer, PSDLFile parent)
+        public void Save(BinaryWriter writer, PSDLFile parent)
         {
             for (var i = 0; i < 4; i++)
             {

@@ -12,6 +12,16 @@ namespace PSDL
         public RoomFlags Flags;
         public byte PropRule;
 
+        public IPSDLElement FindElementOfType<T>()
+        {
+            foreach (var element in Elements)
+            {
+                if (element is T)
+                    return element;
+            }
+            return null;
+        }
+
         public IEnumerable<Vertex> GatherPerimeterVertices()
         {
             var vertices = new Vertex[Perimeter.Count];
@@ -148,23 +158,18 @@ namespace PSDL
             return gatheredFloatsArray;
         }
 
-        private void BasicCTOR()
+        //Constructors
+        public Room()
         {
             Elements = new List<IPSDLElement>();
             Perimeter = new List<PerimeterPoint>();
         }
 
-        public Room(IEnumerable<IPSDLElement> roomElements, IEnumerable<PerimeterPoint> perimeterPoints, byte propRule = 0, byte flags = 0){
-            BasicCTOR();
+        public Room(IEnumerable<IPSDLElement> roomElements, IEnumerable<PerimeterPoint> perimeterPoints, byte propRule = 0, RoomFlags flags = 0) : this(){
             Elements.AddRange(roomElements);
             Perimeter.AddRange(perimeterPoints);
             Flags = (RoomFlags)flags;
             PropRule = propRule;
-        }
-
-        public Room()
-        {
-            BasicCTOR();
         }
     }
 }

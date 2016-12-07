@@ -24,7 +24,7 @@ namespace PSDL.Elements
             return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
         }
 
-        public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
+        public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
             var numSections = (ushort)subtype;
             if (numSections == 0)
@@ -37,7 +37,7 @@ namespace PSDL.Elements
             }
         }
 
-        public void Save(ref BinaryWriter writer, PSDLFile parent)
+        public void Save(BinaryWriter writer, PSDLFile parent)
         {
             //write count if applicable
             var subtype = GetElementSubType();

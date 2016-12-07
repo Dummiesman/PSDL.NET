@@ -16,14 +16,14 @@ namespace PSDL
         public List<Room> Rooms;
         public List<AIRoad> AIRoads;
 
-        private string _filePath;
+        private string _filePath;   
         private bool _elementMapBuilt;
         private Dictionary<int, Type> _elementMap;
 
-        public Vertex DimensionsMin;
-        public Vertex DimensionsMax;
-        public Vertex DimensionsCenter;
-        public float DimensionsRadius;
+        public Vertex DimensionsMin    { get; set; }
+        public Vertex DimensionsMax    { get; set; }
+        public Vertex DimensionsCenter { get; set; }
+        public float DimensionsRadius  { get; set; }
 
         //API for elements to use (maybe there's a better way?)
         public int GetTextureIndex(string tex)
@@ -59,8 +59,7 @@ namespace PSDL
             Floats.Clear();
             _textures.Clear();
 
-            var r = new BinaryReader(File.OpenRead(_filePath));
-            using (r)
+            using (var r = new BinaryReader(File.OpenRead(_filePath)))
             {
                 //verify our magic is PSD0
                 var magic = r.ReadUInt32();
@@ -108,6 +107,7 @@ namespace PSDL
                 //read rooms
                 var numRooms = r.ReadUInt32() - 1;
                 var somethingWeird = r.ReadUInt32();
+
                 uint currentTextureId = 0;
 
                 var perimeterLinks = new Dictionary<PerimeterPoint, ushort>();
@@ -158,10 +158,9 @@ namespace PSDL
                             }
 
                             //read data, setup textures
-                            loader.Read(ref r, subtype, this);
+                            loader.Read(r, subtype, this);
 
                             var requiredTextureCount = loader.GetRequiredTextureCount();
-
                             if (requiredTextureCount > 0)
                             {
                                 if (currentTextureId != 65535)
@@ -241,20 +240,25 @@ namespace PSDL
                 for (var i = 0; i < numAiRoads; i++)
                 {
                     //lots of unknown stuff
-                    var u1 = r.ReadUInt16();
-                    var u2 = r.ReadUInt16();
+                    var flags1 = r.ReadUInt16();
+                    var flags2  = r.ReadUInt16();
                     var u3 = r.ReadByte();
                     var u4 = r.ReadByte();
 
                     //? some kind of distances
-                    var u5 = new float[u3 + u4];
-                    for (var j = 0; j < u5.Length; j++)
+                    var floatData1 = new float[u3];
+                    var floatData2 = new float[u4];
+                    for (var j = 0; j < floatData1.Length; j++)
                     {
-                        u5[j] = r.ReadSingle();
+                        floatData1[j] = r.ReadSingle();
+                    }
+                    for (var j = 0; j < floatData2.Length; j++)
+                    {
+                        floatData2[j] = r.ReadSingle();
                     }
 
 
-                    var u6 = r.ReadUInt16();
+                    var flags3 = r.ReadUInt16();
 
                     //read road start Vertices
                     var scr = new Vertex[4];
@@ -281,7 +285,7 @@ namespace PSDL
                         roadRooms[j] = Rooms[roomNumber - 1];
                     }
 
-                    AIRoads.Add(new AIRoad(u1, u2, u3, u4, u5, u6, scr, ecr, roadRooms));
+                    AIRoads.Add(new AIRoad(flags1, flags2, floatData1, floatData2, flags3, roadRooms));
                 }
 
                 var unconsumedBytes = r.BaseStream.Length - r.BaseStream.Position;
@@ -291,7 +295,7 @@ namespace PSDL
         }
 
         //useful saving functions
-        private string TextureHashString(string[] textures)
+        private static string TextureHashString(string[] textures)
         {
             if (textures == null || textures[0] == null)
                 return null;
@@ -367,9 +371,9 @@ namespace PSDL
                         if (!textureHashDictionary.ContainsKey(hash))
                         {
                             textureHashDictionary[hash] = _textures.Count;
-                            dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
                             _textures.AddRange(dr.DividerTextures);
                         }
+                        dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
                     }
                 }
             }
@@ -432,8 +436,7 @@ namespace PSDL
             average /= Vertices.Count;
             DimensionsCenter = average;
 
-            float radius = 0;
-            radius = DimensionsMax.x - DimensionsMin.x;
+            float radius = DimensionsMax.x - DimensionsMin.x;
             if (DimensionsMax.y - DimensionsMin.y > radius)
             {
                 radius = DimensionsMax.y - DimensionsMin.y;
@@ -467,8 +470,7 @@ namespace PSDL
             var textureHashDictionary = GenerateTextureHashDictionary();
 
             //write file
-            var w = new BinaryWriter(File.OpenWrite(saveAsFile));
-            using (w)
+            using (var w = new BinaryWriter(File.OpenWrite(saveAsFile)))
             {
                 //PSD0, and targetSize
                 w.Write((uint)809784144);
@@ -593,7 +595,7 @@ namespace PSDL
                         //write the element
                         w.Write(BuildAttributeHeader(lastElement, el.GetElementType(), el.GetElementSubType()));
 
-                        el.Save(ref w, this);    
+                        el.Save(w, this);    
                     }
 
                     //finally, write attribute length
@@ -639,33 +641,102 @@ namespace PSDL
                     var road = AIRoads[i];
                     w.Write(road.Unknown1);
                     w.Write(road.Unknown2);
-                    w.Write(road.Unknown3);
-                    w.Write(road.Unknown4);
-                    foreach (var f in road.Unknown5)
+                    w.Write((byte)road.Unknown3.Count);
+                    w.Write((byte)road.Unknown4.Count);
+                    foreach (var f in road.Unknown3)
                     {
                         w.Write(f);
                     }
-                    w.Write(road.Unknown6);
-                    foreach (var scr in road.StartCrossroads)
+                    foreach (var f in road.Unknown4)
                     {
-                        w.Write((ushort)Vertices.IndexOf(scr));
+                        w.Write(f);
                     }
-                    foreach (var ecr in road.EndCrossroads)
+                    w.Write(road.Unknown5);
+
+                    //CALCULATE crossroads, this code is crap, and only test code
+                    //but left here since the AiRoads crash the game anyways
+                    //still trying to figure out why :(
+                    Room startRoom = road.Rooms[0];
+                    Room endRoom = road.Rooms[road.Rooms.Count - 1];
+                    var startRoad = startRoom.FindElementOfType<RoadElement>();
+                    var endRoad = endRoom.FindElementOfType<RoadElement>();
+
+                    if (startRoad == null)
                     {
-                        w.Write((ushort)Vertices.IndexOf(ecr));
+                        startRoad = startRoom.FindElementOfType<DividedRoadElement>();
+                        if (startRoad == null)
+                        {
+                            startRoad = startRoom.FindElementOfType<WalkwayElement>();
+                            var re = (WalkwayElement) startRoad;
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[0]));
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[0]));
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[1]));
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[1]));
+                        }
+                        else
+                        {
+                            var re = (DividedRoadElement) startRoad;
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[0]));
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[1]));
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[4]));
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[5]));
+                        }
+                    }
+                    else
+                    {
+                        var re = (RoadElement) startRoad;
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[0]));
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[1]));
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[2]));
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[3]));
                     }
 
+                    if (endRoad == null)
+                    {
+                        endRoad = endRoom.FindElementOfType<DividedRoadElement>();
+                        if (endRoad == null)
+                        {
+                            endRoad = endRoom.FindElementOfType<WalkwayElement>();
+                            var re = (WalkwayElement) endRoad;
+                            var vertCount = re.Vertices.Count;
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 2]));
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 2]));
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 1]));
+                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 1]));
+                        }
+                        else
+                        {
+                            var re = (DividedRoadElement) endRoad;
+                            var vertCount = re.Vertices.Count;
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 6]));
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 5]));
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 2]));
+                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 1]));
+                        }
+                    }
+                    else
+                    {
+                        var re = (RoadElement)endRoad;
+                        var vertCount = re.Vertices.Count;
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 4]));
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 3]));
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 2]));
+                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 1]));
+
+                    }
+                    
+                
                     w.Write((byte)road.Rooms.Count);
                     foreach (var room in road.Rooms)
                     {
-                        w.Write((ushort)(Rooms.IndexOf(room) + 1));
+                        w.Write((short)(Rooms.IndexOf(room) + 1));
                     }
                 }
             }
         }
 
         //Constructors
-        private void BasicCTOR()
+        public PSDLFile()
         {
             _textures = new List<string>();
             Floats = new List<float>();
@@ -674,16 +745,9 @@ namespace PSDL
             AIRoads = new List<AIRoad>();
         }
 
-        public PSDLFile()
-        {
-            _filePath = null;
-            BasicCTOR();
-        }
-
-        public PSDLFile(string psdlPath)
+        public PSDLFile(string psdlPath) : this()
         {
             _filePath = psdlPath;
-            BasicCTOR();
             Load();
         }
     }

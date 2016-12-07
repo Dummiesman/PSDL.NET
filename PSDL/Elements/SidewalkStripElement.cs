@@ -33,7 +33,7 @@ namespace PSDL.Elements
             return (calculatedSubtype > Constants.MaxSubtype) ? 0 : calculatedSubtype;
         }
 
-        public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
+        public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
             var refs = subtype;
             if (subtype == 0)
@@ -69,7 +69,7 @@ namespace PSDL.Elements
 
         }
 
-        public void Save(ref BinaryWriter writer, PSDLFile parent)
+        public void Save(BinaryWriter writer, PSDLFile parent)
         {
             var subType = GetElementSubType();
             if (subType == 0)

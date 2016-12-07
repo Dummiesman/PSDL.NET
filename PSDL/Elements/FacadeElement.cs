@@ -27,7 +27,7 @@ namespace PSDL.Elements
             return 6;
         }
 
-        public void Read(ref BinaryReader reader, int subtype, PSDLFile parent)
+        public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
             BottomHeight = parent.Floats[reader.ReadUInt16()];
             TopHeight = parent.Floats[reader.ReadUInt16()];
@@ -37,7 +37,7 @@ namespace PSDL.Elements
             Vertices[1] = parent.Vertices[reader.ReadUInt16()];
         }
 
-        public void Save(ref BinaryWriter writer, PSDLFile parent)
+        public void Save(BinaryWriter writer, PSDLFile parent)
         {
             writer.Write((ushort)parent.Floats.IndexOf(BottomHeight));
             writer.Write((ushort)parent.Floats.IndexOf(TopHeight));
