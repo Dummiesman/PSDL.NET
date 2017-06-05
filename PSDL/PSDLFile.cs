@@ -359,6 +359,7 @@ namespace PSDL
             {
                 foreach (var el in rm.Elements)
                 {
+                    //STEP 1 : CACHE DVIIDED ROAD DIVIDERS
                     if (el is Elements.DividedRoadElement)
                     {
                         var dr = (DividedRoadElement)el;
@@ -374,6 +375,22 @@ namespace PSDL
                             _textures.AddRange(dr.DividerTextures);
                         }
                         dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
+                    }
+
+                    //STEP 2 : CACHE ROADS AND TUNNELS, FUCKING PROPULATOR
+                    if (el is DividedRoadElement || el is RoadElement || el is TunnelElement || el is WalkwayElement)
+                    {
+                        var hash = TextureHashString(el.Textures);
+
+                        //weird invisble Textures
+                        if (hash == null)
+                            continue;
+
+                        if (!textureHashDictionary.ContainsKey(hash))
+                        {
+                            textureHashDictionary[hash] = _textures.Count;
+                            _textures.AddRange(el.Textures);
+                        }
                     }
                 }
             }
@@ -635,10 +652,19 @@ namespace PSDL
 
                 w.Write(DimensionsRadius);
 
-                w.Write((uint)AIRoads.Count);
-                for(var i=0; i < AIRoads.Count; i++)
+                //verify ai roads
+                var verifiedAiRoads = new List<AIRoad>();
+                foreach (var aiRoad in AIRoads)
                 {
-                    var road = AIRoads[i];
+                    var verified = aiRoad.StripInvalidRooms();
+                    if (verified.Rooms.Count > 0)
+                        verifiedAiRoads.Add(verified);
+                }
+
+                w.Write((uint) verifiedAiRoads.Count);
+                for(var i=0; i < verifiedAiRoads.Count; i++)
+                {
+                    var road = verifiedAiRoads[i];
                     w.Write(road.Unknown1);
                     w.Write(road.Unknown2);
                     w.Write((byte)road.Unknown3.Count);

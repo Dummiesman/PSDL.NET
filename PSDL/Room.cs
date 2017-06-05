@@ -12,6 +12,19 @@ namespace PSDL
         public RoomFlags Flags;
         public byte PropRule;
 
+        public bool VerifyForPropulation()
+        {
+            foreach (var elements in Elements)
+            {
+                foreach (var texture in elements.Textures)
+                {
+                    if (string.IsNullOrEmpty((texture)))
+                        return false;
+                }
+            }
+            return true;
+        }
+
         public IPSDLElement FindElementOfType<T>()
         {
             foreach (var element in Elements)
