@@ -3,27 +3,21 @@
 
 namespace PSDL.Elements
 {
-    public class SliverElement : IPSDLElement
+    public class SliverElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public Vertex[] Vertices = new Vertex[2];
+        public Vertex[] GetVertices()
+        {
+            return Vertices;
+        }
+
         public float Height;
         public float TextureScale;
-        public string[] Textures { get; set; }
 
-        public int GetRequiredTextureCount()
-        {
-            return 1;
-        }
-
-        public int GetElementType()
-        {
-            return (int)ElementType.Sliver;
-        }
-
-        public int GetElementSubType()
-        {
-            return 4;
-        }
+        //interface
+        public ElementType Type => ElementType.Sliver;
+        public int Subtype => 4;
+        public int RequiredTextureCount => 1;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {

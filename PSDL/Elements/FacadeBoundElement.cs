@@ -3,27 +3,21 @@
 
 namespace PSDL.Elements
 {
-    public class FacadeBoundElement : IPSDLElement
+    public class FacadeBoundElement : SDLElementBase,  IGeometricSDLElement, ISDLElement
     {
         public Vertex[] Vertices = new Vertex[2];
+        public Vertex[] GetVertices()
+        {
+            return Vertices;
+        }
+
         public ushort SunAngle;
         public float Height;
-        public string[] Textures { get; set; }
 
-        public int GetRequiredTextureCount()
-        {
-            return 0;
-        }
-
-        int IPSDLElement.GetElementType()
-        {
-            return (int)ElementType.FacadeBound;
-        }
-
-        public int GetElementSubType()
-        {
-            return 4;
-        }
+        //interface
+        public ElementType Type => ElementType.FacadeBound;
+        public int Subtype => 4;
+        public int RequiredTextureCount => 0;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {

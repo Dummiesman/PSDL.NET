@@ -3,26 +3,26 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class RoadElement : IPSDLElement
+    public class RoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
-        public string[] Textures { get; set; }
-
-        public int GetRequiredTextureCount()
+        public Vertex[] GetVertices()
         {
-            return 3;
+            return Vertices.ToArray();
         }
 
-        public int GetElementType()
+        //interface
+        public ElementType Type => ElementType.Road;
+        public int Subtype
         {
-            return (int)ElementType.Road;
+            get
+            {
+                var segmentCount = Vertices.Count / 4;
+                return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
+            }
         }
+        public int RequiredTextureCount => 3;
 
-        public int GetElementSubType()
-        {
-            var segmentCount = Vertices.Count / 4;
-            return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
-        }
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -40,7 +40,7 @@ namespace PSDL.Elements
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
             //write count if applicable
-            var subtype = GetElementSubType();
+            var subtype = Subtype;
             if (subtype == 0)
             {
                 writer.Write((ushort)(Vertices.Count / 4));
@@ -76,7 +76,7 @@ namespace PSDL.Elements
         public void AddRow(Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight,
             Vertex sidewalkOuterRight)
         {
-            Vertices.AddRange(new Vertex[] {sidewalkOuterLeft, sidewalkInnerLeft, sidewalkInnerRight, sidewalkOuterRight});
+            Vertices.AddRange(new []{sidewalkOuterLeft, sidewalkInnerLeft, sidewalkInnerRight, sidewalkOuterRight});
         }
 
         //Constructors

@@ -6,7 +6,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class TunnelElement : IPSDLElement
+    public class TunnelElement : SDLElementBase, ISDLElement
     {
         [Flags]
         public enum TunnelFlags : ushort
@@ -39,22 +39,10 @@ namespace PSDL.Elements
         public byte Unknown1;
         public byte Unknown2;
 
-        public string[] Textures { get; set; }
-
-        public int GetRequiredTextureCount()
-        {
-            return 6;
-        }
-
-        public int GetElementType()
-        {
-            return (int)ElementType.Tunnel;
-        }
-
-        public int GetElementSubType()
-        {
-            return (IsJunctionTunnel) ? 0 : 3;
-        }
+        //interface
+        public ElementType Type => ElementType.Tunnel;
+        public int Subtype => (IsJunctionTunnel) ? 0 : 3;
+        public int RequiredTextureCount => 6;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -118,7 +106,7 @@ namespace PSDL.Elements
         //Constructors TODO: Create static constructors such as CreateWall CreateTunnel CreateJunctionWall CreateJunctionTunnel, because this is crap
         public TunnelElement(string leftWallTexture, string rightWallTexture, string ceilingTexture, string outerRightTexture, string outerLeftTexture, string undersideTexture, TunnelFlags flags, bool isJunction = false, params bool[] visibleWalls)
         {
-            Textures = new string[] { leftWallTexture, rightWallTexture, ceilingTexture, outerRightTexture, outerLeftTexture, undersideTexture };
+            Textures = new []{ leftWallTexture, rightWallTexture, ceilingTexture, outerRightTexture, outerLeftTexture, undersideTexture };
             IsJunctionTunnel = isJunction;
             Flags = flags;
 

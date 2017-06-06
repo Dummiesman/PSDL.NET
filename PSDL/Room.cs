@@ -8,7 +8,7 @@ namespace PSDL
     public class Room
     {
         public List<PerimeterPoint> Perimeter;
-        public List<IPSDLElement> Elements;
+        public List<ISDLElement> Elements;
         public RoomFlags Flags;
         public byte PropRule;
 
@@ -25,7 +25,7 @@ namespace PSDL
             return true;
         }
 
-        public IPSDLElement FindElementOfType<T>()
+        public ISDLElement FindElementOfType<T>()
         {
             foreach (var element in Elements)
             {
@@ -53,70 +53,10 @@ namespace PSDL
 
             foreach (var el in Elements)
             {
-                var type = (ElementType)el.GetElementType();
-                switch (type)
+                if (el is IGeometricSDLElement)
                 {
-                    case ElementType.Road:
-                        {
-                            var cacheElement = (RoadElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.TriangleFan:
-                    case ElementType.CulledTriangleFan:
-                        {
-                            var cacheElement = (TriangleFanElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.Crosswalk:
-                        {
-                            var cacheElement = (CrosswalkElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.DividedRoad:
-                        {
-                            var cacheElement = (DividedRoadElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.FacadeBound:
-                        {
-                            var cacheElement = (FacadeBoundElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.Facade:
-                        {
-                            var cacheElement = (FacadeElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.RoofTriangleFan:
-                        {
-                            var cacheElement = (RoofTriangleFanElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.Walkway:
-                        {
-                            var cacheElement = (WalkwayElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.Sliver:
-                        {
-                            var cacheElement = (SliverElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
-                    case ElementType.SidewalkStrip:
-                        {
-                            var cacheElement = (SidewalkStripElement)el;
-                            gatheredVertices.UnionWith(cacheElement.Vertices);
-                            break;
-                        }
+                    var GeometricElement = (IGeometricSDLElement) el;
+                    gatheredVertices.UnionWith(GeometricElement.GetVertices());
                 }
             }
 
@@ -134,8 +74,7 @@ namespace PSDL
             
             foreach (var el in Elements)
             {
-                var type = (ElementType)el.GetElementType();
-                switch (type)
+                switch (el.Type)
                 {
                     case ElementType.FacadeBound:
                         {
@@ -174,14 +113,14 @@ namespace PSDL
         //Constructors
         public Room()
         {
-            Elements = new List<IPSDLElement>();
+            Elements = new List<ISDLElement>();
             Perimeter = new List<PerimeterPoint>();
         }
 
-        public Room(IEnumerable<IPSDLElement> roomElements, IEnumerable<PerimeterPoint> perimeterPoints, byte propRule = 0, RoomFlags flags = 0) : this(){
+        public Room(IEnumerable<ISDLElement> roomElements, IEnumerable<PerimeterPoint> perimeterPoints, byte propRule = 0, RoomFlags flags = 0) : this(){
             Elements.AddRange(roomElements);
             Perimeter.AddRange(perimeterPoints);
-            Flags = (RoomFlags)flags;
+            Flags = flags;
             PropRule = propRule;
         }
     }

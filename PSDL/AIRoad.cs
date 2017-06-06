@@ -14,7 +14,7 @@ namespace PSDL
 
         public AIRoad StripInvalidRooms()
         {
-            var road = new AIRoad(Unknown1, Unknown2, Unknown3, Unknown4, Unknown5, null);
+            var road = new AIRoad(Unknown1, Unknown2, Unknown3, Unknown4, Unknown5);
             foreach (var room in Rooms)
             {
                 if (room.VerifyForPropulation())

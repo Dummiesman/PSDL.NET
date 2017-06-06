@@ -41,10 +41,10 @@ namespace PSDL
             _elementMapBuilt = true;
             _elementMap = new Dictionary<int, Type>();
 
-            foreach (var mytype in Assembly.GetExecutingAssembly().GetTypes().Where(mytype => mytype.GetInterfaces().Contains(typeof(IPSDLElement))))
+            foreach (var mytype in Assembly.GetExecutingAssembly().GetTypes().Where(mytype => mytype.GetInterfaces().Contains(typeof(ISDLElement))))
             {
-                var element = (IPSDLElement)Activator.CreateInstance(mytype);
-                _elementMap[element.GetElementType()] = element.GetType();
+                var element = (ISDLElement)Activator.CreateInstance(mytype);
+                _elementMap[(int)element.Type] = element.GetType();
             }
         }
 
@@ -115,7 +115,7 @@ namespace PSDL
                 for (var i = 0; i < numRooms; i++)
                 {
                     var perimPoints = new List<PerimeterPoint>();
-                    var roomElements = new List<IPSDLElement>();
+                    var roomElements = new List<ISDLElement>();
 
                     var numPerimeterPoints = r.ReadUInt32();
                     var numAttributes = r.ReadUInt32();
@@ -142,11 +142,11 @@ namespace PSDL
 
                         if (type != 10)
                         {
-                            IPSDLElement loader = (IPSDLElement)Activator.CreateInstance(_elementMap[type]);
+                            ISDLElement loader = (ISDLElement)Activator.CreateInstance(_elementMap[type]);
 
                             //some Elements require a texture offset
                             var textureOffset = 0;
-                            var loaderType = (ElementType)loader.GetElementType();
+                            var loaderType = loader.Type;
                             switch (loaderType)
                             {
                                 case ElementType.Crosswalk:
@@ -160,7 +160,7 @@ namespace PSDL
                             //read data, setup textures
                             loader.Read(r, subtype, this);
 
-                            var requiredTextureCount = loader.GetRequiredTextureCount();
+                            var requiredTextureCount = loader.RequiredTextureCount;
                             if (requiredTextureCount > 0)
                             {
                                 if (currentTextureId != 65535)
@@ -297,7 +297,7 @@ namespace PSDL
         //useful saving functions
         private static string TextureHashString(string[] textures)
         {
-            if (textures == null || textures[0] == null)
+            if (textures?[0] == null)
                 return null;
 
             var hash = "";
@@ -306,15 +306,6 @@ namespace PSDL
                 hash += texture + "|";
             }
             return hash;
-        }
-
-
-        private void BuildVertexCache(IEnumerable<Vertex> vertices, ref HashSet<Vertex> hashList)
-        {
-            foreach (var v in vertices)
-            {
-                hashList.Add(v);
-            }
         }
 
         private ushort BuildAttributeHeader(bool last, int type, int subtype)
@@ -359,8 +350,8 @@ namespace PSDL
             {
                 foreach (var el in rm.Elements)
                 {
-                    //STEP 1 : CACHE DVIIDED ROAD DIVIDERS
-                    if (el is Elements.DividedRoadElement)
+                    //STEP 1 : CACHE DVIIDED ROAD DIVIDERS (We only have 1 byte)
+                    if (el is DividedRoadElement)
                     {
                         var dr = (DividedRoadElement)el;
                         var hash = TextureHashString(dr.DividerTextures);
@@ -377,7 +368,7 @@ namespace PSDL
                         dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
                     }
 
-                    //STEP 2 : CACHE ROADS AND TUNNELS, FUCKING PROPULATOR
+                    //STEP 2 : CACHE ROADS AND TUNNELS, FUCKING PROPULATOR (Propulator throws a fit if we don't do this)
                     if (el is DividedRoadElement || el is RoadElement || el is TunnelElement || el is WalkwayElement)
                     {
                         var hash = TextureHashString(el.Textures);
@@ -401,7 +392,7 @@ namespace PSDL
                 foreach (var el in rm.Elements)
                 {
                     //no Textures, no hash
-                    if (el.GetRequiredTextureCount() == 0)
+                    if (el.RequiredTextureCount == 0)
                         continue;
 
                     var hash = TextureHashString(el.Textures);
@@ -610,7 +601,7 @@ namespace PSDL
                         var lastElement = (j == rm.Elements.Count - 1);
 
                         //write the element
-                        w.Write(BuildAttributeHeader(lastElement, el.GetElementType(), el.GetElementSubType()));
+                        w.Write(BuildAttributeHeader(lastElement, (int)el.Type, el.Subtype));
 
                         el.Save(w, this);    
                     }

@@ -1,29 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-
 namespace PSDL.Elements
 {
-    public class CrosswalkElement : IPSDLElement
+    public class CrosswalkElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public Vertex[] Vertices = new Vertex[4];
-        public string[] Textures { get; set; }
-
-        public int GetRequiredTextureCount()
+        public Vertex[] GetVertices()
         {
-            return 1;
+            return Vertices;
         }
 
-        int IPSDLElement.GetElementType()
-        {
-            return (int) ElementType.Crosswalk;
-        }
+        //interface
+        public ElementType Type => ElementType.Crosswalk;
+        public int Subtype => 4;
+        public int RequiredTextureCount => 1;
 
-        public int GetElementSubType()
-        {
-            return 4;
-        }
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {

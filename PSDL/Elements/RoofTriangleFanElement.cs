@@ -4,27 +4,27 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class RoofTriangleFanElement : IPSDLElement
+    public class RoofTriangleFanElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
+        public Vertex[] GetVertices()
+        {
+            return Vertices.ToArray();
+        }
+
         public float Height;
-        public string[] Textures { get; set; }
 
-        public int GetRequiredTextureCount()
+        //interface
+        public ElementType Type => ElementType.RoofTriangleFan;
+        public int Subtype
         {
-            return 1;
+            get
+            {
+                var vcount = Vertices.Count - 1;
+                return (vcount > Constants.MaxSubtype) ? 0 : vcount;
+            }
         }
-
-        public int GetElementType()
-        {
-            return (int)ElementType.RoofTriangleFan;
-        }
-
-        public int GetElementSubType()
-        {
-            var vcount = Vertices.Count - 1;
-            return (vcount > Constants.MaxSubtype) ? 0 : vcount;
-        }
+        public int RequiredTextureCount => 1;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -44,7 +44,7 @@ namespace PSDL.Elements
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
             //write count if applicable
-            var subtype = GetElementSubType();
+            var subtype = Subtype;
             if (subtype == 0)
             {
                 writer.Write((ushort)(Vertices.Count - 1));

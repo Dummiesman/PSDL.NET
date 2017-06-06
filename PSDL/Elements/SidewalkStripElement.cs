@@ -4,34 +4,29 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class SidewalkStripElement : IPSDLElement
+    public class SidewalkStripElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
+        public Vertex[] GetVertices()
+        {
+            return Vertices.ToArray();
+        }
+
         public bool IsStartCap;
         public bool IsEndCap;
-        public string[] Textures { get; set; }
 
-        public int GetRequiredTextureCount()
+        //interface
+        public ElementType Type => ElementType.SidewalkStrip;
+        public int Subtype
         {
-            return 1;
-        }
-
-        public int GetElementType()
-        {
-            return (int)ElementType.SidewalkStrip;
-        }
-
-        public int GetElementSubType()
-        {
-            var bias = 0;
-            if (IsStartCap || IsEndCap)
+            get
             {
-                bias = 1;
+                var bias = (IsStartCap || IsEndCap) ? 1 : 0;
+                var calculatedSubtype = (Vertices.Count / 2) + bias;
+                return (calculatedSubtype > Constants.MaxSubtype) ? 0 : calculatedSubtype;
             }
-
-            var calculatedSubtype = (Vertices.Count/2) + bias;
-            return (calculatedSubtype > Constants.MaxSubtype) ? 0 : calculatedSubtype;
         }
+        public int RequiredTextureCount => 1;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -71,7 +66,7 @@ namespace PSDL.Elements
 
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
-            var subType = GetElementSubType();
+            var subType = Subtype;
             if (subType == 0)
             {
                 var bias = 0;

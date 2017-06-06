@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class DividedRoadElement : IPSDLElement
+    public class DividedRoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public enum DividerType : byte
         {
@@ -23,29 +23,29 @@ namespace PSDL.Elements
         }
 
         public List<Vertex> Vertices = new List<Vertex>();
+        public Vertex[] GetVertices()
+        {
+            return Vertices.ToArray();
+        }
+
         public ushort Value;
-        public DividerType Type;
-        public DividerFlags Flags;
+        public DividerType DivType;
+        public DividerFlags DivFlags;
         public byte DividerTexture;
 
-        public string[] Textures { get; set; }
         public string[] DividerTextures { get; set; }
 
-        public int GetRequiredTextureCount()
+        //interface
+        public ElementType Type => ElementType.DividedRoad;
+        public int Subtype
         {
-            return 3;
+            get
+            {
+                var segmentCount = Vertices.Count / 6;
+                return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
+            }
         }
-
-        public int GetElementType()
-        {
-            return (int)ElementType.DividedRoad;
-        }
-
-        public int GetElementSubType()
-        {
-            var segmentCount = Vertices.Count / 6;
-            return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
-        }
+        public int RequiredTextureCount => 3;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -53,10 +53,9 @@ namespace PSDL.Elements
             if (numSections == 0)
                 numSections = reader.ReadUInt16();
 
-            //Console.WriteLine("DIVROAD FLAGTYPE @ " + reader.BaseStream.Position.ToString());
             var flagType = reader.ReadByte();
-            Flags = (DividerFlags)(flagType >> 2);
-            Type = (DividerType)(flagType & 3);
+            DivFlags = (DividerFlags)(flagType >> 2);
+            DivType = (DividerType)(flagType & 3);
 
             DividerTexture = reader.ReadByte(); //texture for divider what the fuck Angel!?
             DividerTextures = new[]
@@ -78,15 +77,14 @@ namespace PSDL.Elements
 
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
-
             //write count if applicable
-            var subtype = GetElementSubType();
+            var subtype = Subtype;
             if (subtype == 0)
             {
                 writer.Write((ushort)(Vertices.Count / 6));
             }
 
-            writer.Write((byte)(((byte)Flags << 2) | (byte)Type));
+            writer.Write((byte)(((byte)DivFlags << 2) | (byte)DivType));
             writer.Write(DividerTexture);
             writer.Write(Value);
 

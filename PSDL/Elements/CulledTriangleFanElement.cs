@@ -7,10 +7,7 @@ namespace PSDL.Elements
     //render it if it's first vertex is above the camera
     public class CulledTriangleFanElement : TriangleFanElement
     {
-        public override int GetElementType()
-        {
-            return (int)ElementType.CulledTriangleFan;
-        }
+        public override ElementType Type => ElementType.CulledTriangleFan;
 
         //Constructors
         public CulledTriangleFanElement(string texture, IEnumerable<Vertex> vertices)

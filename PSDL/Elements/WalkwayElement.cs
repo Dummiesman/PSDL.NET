@@ -4,26 +4,25 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class WalkwayElement : IPSDLElement
+    public class WalkwayElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
-        public string[] Textures { get; set; }
-
-        public int GetRequiredTextureCount()
+        public Vertex[] GetVertices()
         {
-            return 1;
+            return Vertices.ToArray();
         }
 
-        public int GetElementType()
+        //interface
+        public ElementType Type => ElementType.Walkway;
+        public int Subtype
         {
-            return (int)ElementType.Walkway;
+            get
+            {
+                var segmentCount = Vertices.Count / 2;
+                return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
+            }
         }
-
-        public int GetElementSubType()
-        {
-            var segmentCount = Vertices.Count / 2;
-            return (segmentCount > Constants.MaxSubtype) ? 0 : segmentCount;
-        }
+        public int RequiredTextureCount => 1;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -44,7 +43,7 @@ namespace PSDL.Elements
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
             //write count if applicable
-            var subtype = GetElementSubType();
+            var subtype = Subtype;
             if (subtype == 0)
             {
                 writer.Write((ushort)(Vertices.Count / 2));
