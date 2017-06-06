@@ -17,6 +17,7 @@ namespace PSDL.Elements
         public ElementType Type => ElementType.Crosswalk;
         public int Subtype => 4;
         public int RequiredTextureCount => 1;
+        public override int TextureIndexOffset => 2;
 
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)

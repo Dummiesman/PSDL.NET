@@ -27,6 +27,7 @@ namespace PSDL.Elements
             }
         }
         public int RequiredTextureCount => 1;
+        public override int TextureIndexOffset => 1;
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {

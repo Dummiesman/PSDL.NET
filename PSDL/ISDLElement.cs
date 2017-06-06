@@ -14,11 +14,13 @@ namespace PSDL
         ElementType Type { get; }
         int Subtype { get; }
         int RequiredTextureCount { get; }
+        int TextureIndexOffset { get; }
     }
 
     public class SDLElementBase
     {
         public string[] Textures { get; set; }
+        public virtual int TextureIndexOffset => 0;
     }
 
     public interface IGeometricSDLElement

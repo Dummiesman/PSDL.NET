@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace PSDL.Elements
@@ -22,7 +23,6 @@ namespace PSDL.Elements
             }
         }
         public int RequiredTextureCount => 3;
-
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
@@ -54,29 +54,62 @@ namespace PSDL.Elements
         }
 
         //API
-        public void DeleteSidewalk(bool moveRoadOutwards = false)
+        public int RowCount => Vertices.Count / 4;
+        public void DeleteSidewalk(SidewalkRemovalMode mode)
         {
             //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
-            for (var i = 0; i < Vertices.Count; i += 4)
+            for (int i = 0; i < RowCount; i++)
             {
-                if (!moveRoadOutwards)
+                var row = GetRow(i);
+                if (mode == SidewalkRemovalMode.MoveRoadOutwards)
                 {
-                    Vertices[i] = Vertices[i + 1];
-                    Vertices[i + 3] = Vertices[i + 2];
+                    row[1] = row[0];
+                    row[2] = row[3];
                 }
                 else
                 {
-                    Vertices[i + 1] = Vertices[i];
-                    Vertices[i + 2] = Vertices[i + 3];
+                    row[0] = row[1];
+                    row[3] = row[2];
                 }
+                SetRow(i, row);
             }
         }
 
-        //API
         public void AddRow(Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight,
             Vertex sidewalkOuterRight)
         {
             Vertices.AddRange(new []{sidewalkOuterLeft, sidewalkInnerLeft, sidewalkInnerRight, sidewalkOuterRight});
+        }
+
+        public void AddRow(Vertex[] vertices)
+        {
+            if(vertices.Length != 4)
+                throw new Exception("Wrong amount of vertices for a row.");
+            AddRow(vertices[0], vertices[1], vertices[2], vertices[3]);
+        }
+
+        public void SetRow(int rowId, Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight,
+            Vertex sidewalkOuterRight)
+        {
+            int baseIndex = rowId * 4;
+            Vertices[baseIndex] = sidewalkOuterLeft;
+            Vertices[baseIndex + 1] = sidewalkInnerLeft;
+            Vertices[baseIndex + 2] = sidewalkInnerRight;
+            Vertices[baseIndex + 3] = sidewalkOuterRight;
+        }
+
+
+        public void SetRow(int rowId, Vertex[] vertices)
+        {
+            if (vertices.Length != 4)
+                throw new Exception("Wrong amount of vertices for a row.");
+            SetRow(rowId, vertices[0], vertices[1], vertices[2], vertices[3]);
+        }
+
+        public Vertex[] GetRow(int rowId)
+        {
+            int baseIndex = rowId * 4;
+            return new []{Vertices[baseIndex], Vertices[baseIndex + 1], Vertices[baseIndex + 2], Vertices[baseIndex + 3]};
         }
 
         //Constructors

@@ -63,10 +63,10 @@ namespace PSDL
 
         public override bool Equals(object obj)
         {
-            if(obj is Vertex)
+            var vertex = obj as Vertex;
+            if(vertex != null)
             {
-                Vertex v = (Vertex)obj;
-                if(v.x.Equals(x) && v.y.Equals(y) && v.z.Equals(z))
+                if(vertex.x.Equals(x) && vertex.y.Equals(y) && vertex.z.Equals(z))
                 {
                     return true;
                 }

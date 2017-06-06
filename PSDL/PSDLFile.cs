@@ -10,14 +10,14 @@ namespace PSDL
 {
     public class PSDLFile
     {
-        private List<string> _textures;
+        private List<string> m_Textures;
         public List<float> Floats;
         public List<Vertex> Vertices;
         public List<Room> Rooms;
         public List<AIRoad> AIRoads;
 
-        private string _filePath;   
-        private bool _elementMapBuilt;
+        private string m_FilePath;   
+        private bool m_ElementMapBuilt;
         private Dictionary<int, Type> _elementMap;
 
         public Vertex DimensionsMin    { get; set; }
@@ -28,17 +28,17 @@ namespace PSDL
         //API for elements to use (maybe there's a better way?)
         public int GetTextureIndex(string tex)
         {
-            return _textures.IndexOf(tex);
+            return m_Textures.IndexOf(tex);
         }
 
         public string GetTextureFromCache(int id)
         {
-            return _textures[id];
+            return m_Textures[id];
         }
 
         private void RebuildElementMap()
         {
-            _elementMapBuilt = true;
+            m_ElementMapBuilt = true;
             _elementMap = new Dictionary<int, Type>();
 
             foreach (var mytype in Assembly.GetExecutingAssembly().GetTypes().Where(mytype => mytype.GetInterfaces().Contains(typeof(ISDLElement))))
@@ -50,16 +50,16 @@ namespace PSDL
 
         private void Load()
         {
-            if (!_elementMapBuilt)
+            if (!m_ElementMapBuilt)
                 RebuildElementMap();
 
             //clear these, we'll be overwriting the data
             Vertices.Clear();
             Rooms.Clear();
             Floats.Clear();
-            _textures.Clear();
+            m_Textures.Clear();
 
-            using (var r = new BinaryReader(File.OpenRead(_filePath)))
+            using (var r = new BinaryReader(File.OpenRead(m_FilePath)))
             {
                 //verify our magic is PSD0
                 var magic = r.ReadUInt32();
@@ -95,12 +95,12 @@ namespace PSDL
                     var textureLen = r.ReadByte();
                     if (textureLen > 0)
                     {
-                        _textures.Add(new string(r.ReadChars(textureLen - 1)));
+                        m_Textures.Add(new string(r.ReadChars(textureLen - 1)));
                         r.BaseStream.Seek(1, SeekOrigin.Current);
                     }
                     else
                     {
-                        _textures.Add("");
+                        m_Textures.Add(string.Empty);
                     }
                 }
 
@@ -131,8 +131,8 @@ namespace PSDL
                         perimeterLinks[perimPoints[perimPoints.Count - 1]] = perimBlockIndex;
                     }
 
-                    var attributeStartAddress = r.BaseStream.Position;
                     //attributes
+                    var attributeStartAddress = r.BaseStream.Position;
                     while (r.BaseStream.Position < (attributeStartAddress + (numAttributes * 2)))
                     {
                         //extract attribute Type and subtype
@@ -140,55 +140,43 @@ namespace PSDL
                         int type = att >> 3 & 15;
                         int subtype = att & 7;
 
-                        if (type != 10)
-                        {
-                            ISDLElement loader = (ISDLElement)Activator.CreateInstance(_elementMap[type]);
-
-                            //some Elements require a texture offset
-                            var textureOffset = 0;
-                            var loaderType = loader.Type;
-                            switch (loaderType)
-                            {
-                                case ElementType.Crosswalk:
-                                    textureOffset = 2;
-                                    break;
-                                case ElementType.SidewalkStrip:
-                                    textureOffset = 1;
-                                    break;
-                            }
-
-                            //read data, setup textures
-                            loader.Read(r, subtype, this);
-
-                            var requiredTextureCount = loader.RequiredTextureCount;
-                            if (requiredTextureCount > 0)
-                            {
-                                if (currentTextureId != 65535)
-                                {
-
-                                    loader.Textures = _textures.GetRange((int)currentTextureId + textureOffset, requiredTextureCount).ToArray();
-       
-                                }
-                                else
-                                {
-                                    //null texture
-                                    loader.Textures = new string[requiredTextureCount];
-                                    for (var j = 0; j < requiredTextureCount; j++)
-                                    {
-                                        loader.Textures[j] = null;
-                                    }
-                                }
-                            }
-
-                            //finally, add to room
-                            roomElements.Add(loader);
-                        }
-                        else
+                        //new texture
+                        if (type == 10)
                         {
                             //new texture
                             var textureId = (ushort)(r.ReadUInt16() + (256 * subtype) - 1);
                             currentTextureId = textureId;
+                            continue;
                         }
+
+                        //get the loader
+                        ISDLElement loader = (ISDLElement)Activator.CreateInstance(_elementMap[type]);
+
+                        //some Elements require a texture offset
+                        var textureOffset = loader.TextureIndexOffset;
+
+                        //read data, setup textures
+                        loader.Read(r, subtype, this);
+
+                        var requiredTextureCount = loader.RequiredTextureCount;
+                        if (requiredTextureCount > 0)
+                        {
+                            if (currentTextureId != 65535)
+                            {
+                                loader.Textures = m_Textures.GetRange((int)currentTextureId + textureOffset, requiredTextureCount).ToArray();
+                            }
+                            else
+                            {
+                                //null texture
+                                loader.Textures = new string[requiredTextureCount];
+                                for (var j = 0; j < requiredTextureCount; j++)
+                                    loader.Textures[j] = null;
+                            }
+                        }
+
+                        //finally, add to room
+                        roomElements.Add(loader);
+
                     }
 
                     //finally, store this room
@@ -204,14 +192,7 @@ namespace PSDL
                     foreach (var pp in room.Perimeter)
                     {
                         var ppIndex = perimeterLinks[pp];
-                        Room connection = null;
-
-                        if (ppIndex > 0)
-                        {
-                            connection = Rooms[ppIndex - 1];
-                        }
-
-                        pp.ConnectedRoom = connection;
+                        pp.ConnectedRoom = (ppIndex > 0) ? Rooms[ppIndex - 1] :null;
                     }
                 }
 
@@ -235,13 +216,12 @@ namespace PSDL
                 DimensionsCenter = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
                 DimensionsRadius = r.ReadSingle();
 
-                //read prop paths         
+                //read ai roads        
                 var numAiRoads = r.ReadUInt32();
                 for (var i = 0; i < numAiRoads; i++)
                 {
                     //lots of unknown stuff
-                    var flags1 = r.ReadUInt16();
-                    var flags2  = r.ReadUInt16();
+                    var flags = r.ReadUInt32();
                     var u3 = r.ReadByte();
                     var u4 = r.ReadByte();
 
@@ -267,14 +247,12 @@ namespace PSDL
                         scr[j] = Vertices[r.ReadUInt16()];
                     }
 
-
                     //read road end Vertices
                     var ecr = new Vertex[4];
                     for (var j = 0; j < 4; j++)
                     {
                         ecr[j] = Vertices[r.ReadUInt16()];
                     }
-
 
                     var numRoomsInRoad = r.ReadByte();
                     var roadRooms = new Room[numRoomsInRoad];
@@ -285,7 +263,7 @@ namespace PSDL
                         roadRooms[j] = Rooms[roomNumber - 1];
                     }
 
-                    AIRoads.Add(new AIRoad(flags1, flags2, floatData1, floatData2, flags3, roadRooms));
+                    AIRoads.Add(new AIRoad((AIRoad.PropulationFlags)flags, floatData1, floatData2, flags3, roadRooms));
                 }
 
                 var unconsumedBytes = r.BaseStream.Length - r.BaseStream.Position;
@@ -300,10 +278,10 @@ namespace PSDL
             if (textures?[0] == null)
                 return null;
 
-            var hash = "";
+            var hash = string.Empty;
             foreach(var texture in textures)
             {
-                hash += texture + "|";
+                hash += $"{texture}|";
             }
             return hash;
         }
@@ -342,7 +320,7 @@ namespace PSDL
             //build Textures cache. start with divided roads
             //since they have a special index for Textures
             //which is only a wee little byte
-            _textures.Clear();
+            m_Textures.Clear();
 
             var textureHashDictionary = new Dictionary<string, int>();
 
@@ -362,8 +340,8 @@ namespace PSDL
 
                         if (!textureHashDictionary.ContainsKey(hash))
                         {
-                            textureHashDictionary[hash] = _textures.Count;
-                            _textures.AddRange(dr.DividerTextures);
+                            textureHashDictionary[hash] = m_Textures.Count;
+                            m_Textures.AddRange(dr.DividerTextures);
                         }
                         dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
                     }
@@ -379,8 +357,8 @@ namespace PSDL
 
                         if (!textureHashDictionary.ContainsKey(hash))
                         {
-                            textureHashDictionary[hash] = _textures.Count;
-                            _textures.AddRange(el.Textures);
+                            textureHashDictionary[hash] = m_Textures.Count;
+                            m_Textures.AddRange(el.Textures);
                         }
                     }
                 }
@@ -403,8 +381,8 @@ namespace PSDL
 
                     if (!textureHashDictionary.ContainsKey(hash))
                     {
-                        textureHashDictionary[hash] = _textures.Count;
-                        _textures.AddRange(el.Textures);
+                        textureHashDictionary[hash] = m_Textures.Count;
+                        m_Textures.AddRange(el.Textures);
                     }
                 }
             }
@@ -458,17 +436,17 @@ namespace PSDL
 
         public void ReSave()
         {
-            if (_filePath == null)  
+            if (m_FilePath == null)  
                 throw new Exception("Can't save PSDL file without being constructed from a file path. Use SaveAs instead.");
 
-            SaveAs(_filePath);
+            SaveAs(m_FilePath);
         }
 
 
 
         public void SaveAs(string saveAsFile)
         {
-            if (!_elementMapBuilt)
+            if (!m_ElementMapBuilt)
                 RebuildElementMap();
             
             //initialize caches and get hash dict
@@ -501,42 +479,33 @@ namespace PSDL
                 }
 
                 //Textures
-                w.Write((uint)_textures.Count + 1);
-                for (var i = 0; i < _textures.Count; i++)
+                w.Write((uint)m_Textures.Count + 1);
+                foreach (var texture in m_Textures)
                 {
-                
-                    if (_textures[i].Length > 0)
+                    if (texture.Length > 0)
                     {
-                        w.Write((byte)(_textures[i].Length + 1));
-                        for (var j = 0; j < _textures[i].Length; j++)
+                        w.Write((byte)(texture.Length + 1)); //length incl. null terminator
+                        for (var j = 0; j < texture.Length; j++)
                         {
-                            w.Write(_textures[i][j]);
+                            w.Write(texture[j]);
                         }
-                        w.Write((byte)0);
                     }
-                    else
-                    {
-                        w.Write((byte)0);
-                    }
+                    w.Write((byte)0); //null terminator
                 }
 
                 //rooms
                 w.Write((uint)Rooms.Count + 1);
                 w.Write((uint)0); //unknown stuff :/
-
-                for (var i = 0; i < Rooms.Count; i++)
+                foreach (var room in Rooms)
                 {
-                    var rm = Rooms[i];
-
-                    w.Write((uint)rm.Perimeter.Count);
+                    w.Write((uint)room.Perimeter.Count);
 
                     var attributeLengthPtr = w.BaseStream.Position;
                     w.Write((uint)0);
 
                     //write Perimeter
-                    for (var j = 0; j < rm.Perimeter.Count; j++)
+                    foreach (var pp in room.Perimeter)
                     {
-                        var pp = rm.Perimeter[j];
                         w.Write((ushort)Vertices.IndexOf(pp.Vertex));
 
                         if (pp.ConnectedRoom == null)
@@ -554,9 +523,9 @@ namespace PSDL
                     var lastTextureHash = "$$";
                     var attributeStartPtr = w.BaseStream.Position;
 
-                    for (var j = 0; j < rm.Elements.Count; j++)
+                    for (var j = 0; j < room.Elements.Count; j++)
                     {
-                        var el = rm.Elements[j];
+                        var el = room.Elements[j];
                         var texHash = TextureHashString(el.Textures);
 
                         //need a new texture statement?
@@ -565,21 +534,8 @@ namespace PSDL
                             if (texHash != null)
                             {
                                 //generate a new texture
-                                var textureIndex = textureHashDictionary[texHash];
+                                var textureIndex = textureHashDictionary[texHash] + 1 + -el.TextureIndexOffset;
 
-                                //some Elements require a texture offset
-                                var textureOffset = 0;
-                                if (el is CrosswalkElement)
-                                {
-                                    textureOffset = -2;
-                                }
-                                else if (el is SidewalkStripElement)
-                                {
-                                    textureOffset = -1;
-                                }
-                                textureIndex += textureOffset;
-
-                                textureIndex += 1;
                                 int textureIndexByte = textureIndex % 256;
                                 int textureIndexSubtype = (int)Math.Floor((float)textureIndex / 256);
 
@@ -597,11 +553,8 @@ namespace PSDL
                             }
                         }
 
-                        //last element?
-                        var lastElement = (j == rm.Elements.Count - 1);
-
                         //write the element
-                        w.Write(BuildAttributeHeader(lastElement, (int)el.Type, el.Subtype));
+                        w.Write(BuildAttributeHeader((j == room.Elements.Count - 1), (int)el.Type, el.Subtype));
 
                         el.Save(w, this);    
                     }
@@ -656,8 +609,7 @@ namespace PSDL
                 for(var i=0; i < verifiedAiRoads.Count; i++)
                 {
                     var road = verifiedAiRoads[i];
-                    w.Write(road.Unknown1);
-                    w.Write(road.Unknown2);
+                    w.Write((int)road.Flags);
                     w.Write((byte)road.Unknown3.Count);
                     w.Write((byte)road.Unknown4.Count);
                     foreach (var f in road.Unknown3)
@@ -670,79 +622,22 @@ namespace PSDL
                     }
                     w.Write(road.Unknown5);
 
-                    //CALCULATE crossroads, this code is crap, and only test code
-                    //but left here since the AiRoads crash the game anyways
-                    //still trying to figure out why :(
+                    //calculate crossroads
                     Room startRoom = road.Rooms[0];
                     Room endRoom = road.Rooms[road.Rooms.Count - 1];
-                    var startRoad = startRoom.FindElementOfType<RoadElement>();
-                    var endRoad = endRoom.FindElementOfType<RoadElement>();
 
-                    if (startRoad == null)
+                    var startCrossroads = startRoom.GetCrossroadVertices(CrossroadEnd.First);
+                    var endCrossroads = endRoom.GetCrossroadVertices(CrossroadEnd.Last);
+                    foreach(var vertex in startCrossroads)
                     {
-                        startRoad = startRoom.FindElementOfType<DividedRoadElement>();
-                        if (startRoad == null)
-                        {
-                            startRoad = startRoom.FindElementOfType<WalkwayElement>();
-                            var re = (WalkwayElement) startRoad;
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[0]));
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[0]));
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[1]));
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[1]));
-                        }
-                        else
-                        {
-                            var re = (DividedRoadElement) startRoad;
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[0]));
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[1]));
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[4]));
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[5]));
-                        }
+                        w.Write((ushort)Vertices.IndexOf(vertex));
                     }
-                    else
+                    foreach (var vertex in endCrossroads)
                     {
-                        var re = (RoadElement) startRoad;
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[0]));
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[1]));
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[2]));
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[3]));
+                        w.Write((ushort)Vertices.IndexOf(vertex));
                     }
 
-                    if (endRoad == null)
-                    {
-                        endRoad = endRoom.FindElementOfType<DividedRoadElement>();
-                        if (endRoad == null)
-                        {
-                            endRoad = endRoom.FindElementOfType<WalkwayElement>();
-                            var re = (WalkwayElement) endRoad;
-                            var vertCount = re.Vertices.Count;
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 2]));
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 2]));
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 1]));
-                            w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 1]));
-                        }
-                        else
-                        {
-                            var re = (DividedRoadElement) endRoad;
-                            var vertCount = re.Vertices.Count;
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 6]));
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 5]));
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 2]));
-                            w.Write((ushort) Vertices.IndexOf(re.Vertices[vertCount - 1]));
-                        }
-                    }
-                    else
-                    {
-                        var re = (RoadElement)endRoad;
-                        var vertCount = re.Vertices.Count;
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 4]));
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 3]));
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 2]));
-                        w.Write((ushort)Vertices.IndexOf(re.Vertices[vertCount - 1]));
 
-                    }
-                    
-                
                     w.Write((byte)road.Rooms.Count);
                     foreach (var room in road.Rooms)
                     {
@@ -755,7 +650,7 @@ namespace PSDL
         //Constructors
         public PSDLFile()
         {
-            _textures = new List<string>();
+            m_Textures = new List<string>();
             Floats = new List<float>();
             Vertices = new List<Vertex>();
             Rooms = new List<Room>();
@@ -764,7 +659,7 @@ namespace PSDL
 
         public PSDLFile(string psdlPath) : this()
         {
-            _filePath = psdlPath;
+            m_FilePath = psdlPath;
             Load();
         }
     }
