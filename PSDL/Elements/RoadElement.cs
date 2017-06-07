@@ -112,11 +112,20 @@ namespace PSDL.Elements
             return new []{Vertices[baseIndex], Vertices[baseIndex + 1], Vertices[baseIndex + 2], Vertices[baseIndex + 3]};
         }
 
+        public Vertex GetRowCenterPoint(int rowId)
+        {
+            var row = GetRow(rowId);
+            return new Vertex((row[0].x + row[3].x) / 2, (row[0].y + row[3].y) / 2, (row[0].z + row[3].z) / 2);
+        }
+
         //Constructors
         public RoadElement(string roadTexture, string sidewalkTexture, string LODTexture, IEnumerable<Vertex> vertices)
         {
             Textures = new []{roadTexture, sidewalkTexture, LODTexture};
             Vertices.AddRange(vertices);
+
+            if((Vertices.Count % 4) != 0) 
+                throw new Exception("Incorrect vertex count given to a road. A road must have a vertex count equal to a multiple of 4.");
         }
 
         public RoadElement(string roadTexture, string sidewalkTexture, string LODTexture)

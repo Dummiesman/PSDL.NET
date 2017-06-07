@@ -539,10 +539,7 @@ namespace PSDL
                                 int textureIndexByte = textureIndex % 256;
                                 int textureIndexSubtype = (int)Math.Floor((float)textureIndex / 256);
 
-                                var textureHeader = BuildAttributeHeader(false, 10, textureIndexSubtype);
-
-                                w.Write(textureHeader);
-
+                                w.Write(BuildAttributeHeader(false, 10, textureIndexSubtype));
                                 w.Write((ushort)(textureIndexByte));
                             }
                             else
