@@ -14,7 +14,7 @@ namespace PSDL.Elements
         public float LightAngle
         {
             get => (float) m_SunAngle * 5.625f;
-            set => m_SunAngle = Math.Min((ushort)63, (ushort)(value / 5.625));
+            set => m_SunAngle = Math.Min((ushort)63, (ushort)((value % 360f) / 5.625));
         }
         private ushort m_SunAngle;
         public float Height;
@@ -45,14 +45,14 @@ namespace PSDL.Elements
         {
             float xDiff = Vertices[1].x - Vertices[0].x;
             float yDiff = Vertices[1].z - Vertices[0].z;
-            double angle =  ((Math.Atan2(yDiff, xDiff) * (180 / Math.PI)) + 180) % 360;
+            double angle =  ((Math.Atan2(yDiff, xDiff) * (180 / Math.PI)) + 180);
             LightAngle = (float)angle;
         }
 
         //Constructors
         public FacadeBoundElement(float lightAngle, float height, Vertex leftVertex, Vertex rightVertex)
         {
-            LightAngle = lightAngle % 360f;
+            LightAngle = lightAngle;
             Height = height;
             Vertices[0] = leftVertex;
             Vertices[1] = rightVertex;
