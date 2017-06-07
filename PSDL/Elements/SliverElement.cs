@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 
 namespace PSDL.Elements
@@ -33,6 +34,14 @@ namespace PSDL.Elements
             writer.Write((ushort)parent.Floats.IndexOf(TextureScale));
             writer.Write((ushort)parent.Vertices.IndexOf(Vertices[0]));
             writer.Write((ushort)parent.Vertices.IndexOf(Vertices[1]));
+        }
+
+        //API
+        public void SetTextureTiling(int numTiles)
+        {
+            var v1 = new Vertex(Vertices[0].x, Height, Vertices[0].z);
+            var v2 = new Vertex(Vertices[1].x, Height, Vertices[1].z);
+            TextureScale = (float) numTiles / v1.Distance(v2);
         }
 
         //Constructors

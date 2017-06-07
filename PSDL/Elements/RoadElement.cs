@@ -54,6 +54,11 @@ namespace PSDL.Elements
         }
 
         //API
+        public void SetTexture(RoadTextureType type, string texture)
+        {
+            Textures[(int)type] = texture;
+        }
+
         public int RowCount => Vertices.Count / 4;
         public void DeleteSidewalk(SidewalkRemovalMode mode)
         {

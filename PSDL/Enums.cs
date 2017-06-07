@@ -5,6 +5,20 @@ using System.Text;
 
 namespace PSDL
 {
+    public enum DividerTextureType
+    {
+        Top,
+        Side,
+        Cap,
+        SideStrips
+    }
+
+    public enum RoadTextureType
+    {
+        Surface,
+        Sidewalk,
+        LOD
+    }
 
     public enum CrossroadEnd
     {
