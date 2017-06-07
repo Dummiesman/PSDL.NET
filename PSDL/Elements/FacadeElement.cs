@@ -42,6 +42,14 @@ namespace PSDL.Elements
             writer.Write((ushort)parent.Vertices.IndexOf(Vertices[1]));
         }
 
+        //API
+        public FacadeBoundElement CreateBound()
+        {
+            var bound = new FacadeBoundElement(0, this.TopHeight, Vertices[0], Vertices[1]);
+            bound.RecalculateAngle();
+            return bound;
+        }
+
         //Constructors
         public FacadeElement(string texture, float bottomHeight, float topHeight, short uTiling, short vTiling, Vertex leftVertex, Vertex rightVertex)
         {

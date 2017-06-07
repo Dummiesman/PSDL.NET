@@ -198,7 +198,7 @@ namespace PSDL.Elements
         public Vertex GetRowCenterPoint(int rowId)
         {
             var row = GetRow(rowId);
-            return new Vertex((row[0].x + row[5].x) / 2, (row[0].y + row[5].y) / 2, (row[0].z + row[5].z) / 2);
+            return (row[0] + row[5]) / 2;
         }
 
 

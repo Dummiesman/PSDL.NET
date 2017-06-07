@@ -64,6 +64,12 @@ namespace PSDL
 
         public bool VerifyForPropulation()
         {
+            //verify there are roads in this room
+            if (FindElementOfType<RoadElement>() == null && FindElementOfType<DividedRoadElement>() == null &&
+                FindElementOfType<WalkwayElement>() == null)
+                return false;
+
+            //verify we have a texture to avoid invalid cmd
             foreach (var elements in Elements)
             {
                 foreach (var texture in elements.Textures)
@@ -72,6 +78,7 @@ namespace PSDL
                         return false;
                 }
             }
+            
             return true;
         }
 

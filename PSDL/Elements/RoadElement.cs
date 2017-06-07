@@ -56,7 +56,7 @@ namespace PSDL.Elements
         //API
         public void SetTexture(RoadTextureType type, string texture)
         {
-            Textures[(int)type] = texture;
+            Textures[(int) type] = texture;
         }
 
         public int RowCount => Vertices.Count / 4;
@@ -120,7 +120,7 @@ namespace PSDL.Elements
         public Vertex GetRowCenterPoint(int rowId)
         {
             var row = GetRow(rowId);
-            return new Vertex((row[0].x + row[3].x) / 2, (row[0].y + row[3].y) / 2, (row[0].z + row[3].z) / 2);
+            return (row[0] + row[3]) / 2;
         }
 
         //Constructors

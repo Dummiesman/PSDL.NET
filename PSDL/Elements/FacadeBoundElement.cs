@@ -1,5 +1,5 @@
-﻿using System.IO;
-
+﻿using System;
+using System.IO;
 
 namespace PSDL.Elements
 {
@@ -11,7 +11,12 @@ namespace PSDL.Elements
             return Vertices;
         }
 
-        public ushort SunAngle;
+        public float LightAngle
+        {
+            get => (float) m_SunAngle * 5.625f;
+            set => m_SunAngle = Math.Min((ushort)63, (ushort)(value / 5.625));
+        }
+        private ushort m_SunAngle;
         public float Height;
 
         //interface
@@ -21,7 +26,7 @@ namespace PSDL.Elements
 
         public void Read(BinaryReader reader, int subtype, PSDLFile parent)
         {
-            SunAngle = reader.ReadUInt16();
+            m_SunAngle = reader.ReadUInt16();
             Height = parent.Floats[reader.ReadUInt16()];
             Vertices[0] = parent.Vertices[reader.ReadUInt16()];
             Vertices[1] = parent.Vertices[reader.ReadUInt16()];
@@ -29,20 +34,25 @@ namespace PSDL.Elements
 
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
-            writer.Write(SunAngle);
+            writer.Write(m_SunAngle);
             writer.Write((ushort)parent.Floats.IndexOf(Height));
             writer.Write((ushort)parent.Vertices.IndexOf(Vertices[0]));
             writer.Write((ushort)parent.Vertices.IndexOf(Vertices[1]));
         }
 
-        //Constructors
-        public FacadeBoundElement(float sunAngle, float height, Vertex leftVertex, Vertex rightVertex)
+        //API
+        public void RecalculateAngle()
         {
-            //clamp angle
-            if (sunAngle > 1.0f)
-                sunAngle = 1.0f;
-            
-            SunAngle = (ushort)(sunAngle * 255);
+            float xDiff = Vertices[1].x - Vertices[0].x;
+            float yDiff = Vertices[1].z - Vertices[0].z;
+            double angle =  ((Math.Atan2(yDiff, xDiff) * (180 / Math.PI)) + 180) % 360;
+            LightAngle = (float)angle;
+        }
+
+        //Constructors
+        public FacadeBoundElement(float lightAngle, float height, Vertex leftVertex, Vertex rightVertex)
+        {
+            LightAngle = lightAngle % 360f;
             Height = height;
             Vertices[0] = leftVertex;
             Vertices[1] = rightVertex;
