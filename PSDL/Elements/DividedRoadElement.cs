@@ -101,6 +101,46 @@ namespace PSDL.Elements
             Textures[(int) type] = texture;
         }
 
+        public string GetTexture(RoadTextureType type)
+        {
+            return Textures[(int)type];
+        }
+
+        public string GetDividerTexture(DividerTextureType type)
+        {
+            switch (type)
+            {
+                case DividerTextureType.Top:
+                    if (DivType == DividerType.Wedged || DivType == DividerType.Elevated)
+                    {
+                        return DividerTextures[2];
+                    }
+                    else
+                    {
+                        return DividerTextures[1];
+                    }
+                    break;
+                case DividerTextureType.Side:
+                    if (DivType == DividerType.Wedged)
+                    {
+                        return DividerTextures[1];
+                    }
+                    else if (DivType == DividerType.Elevated)
+                    {
+                        return DividerTextures[0];
+                    }
+                    break;
+                case DividerTextureType.SideStrips:
+                    if (DivType == DividerType.Elevated)
+                        return DividerTextures[1];
+                    break;
+                case DividerTextureType.Cap:
+                    return DividerTextures[3];
+                    break;
+            }
+            return string.Empty;
+        }
+
         public void SetDividerTexture(DividerTextureType type, string texture)
         {
             switch (type)
