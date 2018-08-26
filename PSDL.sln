@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSDL", "PSDL\PSDL.csproj", "{D5FC95B0-23B4-4F06-8BA9-5FC78C4AEA7F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{94A3C655-9A83-4B70-96B8-086483E54017}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D5FC95B0-23B4-4F06-8BA9-5FC78C4AEA7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5FC95B0-23B4-4F06-8BA9-5FC78C4AEA7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5FC95B0-23B4-4F06-8BA9-5FC78C4AEA7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94A3C655-9A83-4B70-96B8-086483E54017}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94A3C655-9A83-4B70-96B8-086483E54017}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94A3C655-9A83-4B70-96B8-086483E54017}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94A3C655-9A83-4B70-96B8-086483E54017}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

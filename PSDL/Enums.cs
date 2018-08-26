@@ -5,6 +5,21 @@ using System.Text;
 
 namespace PSDL
 {
+    public enum DividerType : byte
+    {
+        Invisible = 0,
+        Flat = 1,
+        Elevated = 2,
+        Wedged = 3
+    }
+
+    [Flags]
+    public enum DividerFlags : byte
+    {
+        ClosedEnd = 32,
+        ClosedStart = 16,
+    }
+
     public enum DividerTextureType
     {
         Top,

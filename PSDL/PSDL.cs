@@ -51,6 +51,11 @@ namespace PSDL
             z = _z;
         }
 
+        public Vertex Clone()
+        {
+            return new Vertex(x, y, z);
+        }
+
         public override string ToString()
         {
             return "(x:" +  x + ", y:" + y + ", z:" + z + ")";

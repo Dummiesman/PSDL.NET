@@ -1,9 +1,11 @@
 ﻿using PSDL.Elements;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 
 namespace PSDL
@@ -16,6 +18,16 @@ namespace PSDL
         public List<Room> Rooms;
         public List<AIRoad> AIRoads;
 
+        /// <summary>
+        /// References material indices in materials.mtl
+        /// </summary>
+        public Dictionary<string, byte> MaterialIndices;
+
+        /// <summary>
+        /// All elements in the SDL file. If you want to modify elements, modify them per room.
+        /// </summary>
+        public IEnumerable<ISDLElement> Elements => Rooms.SelectMany(x => x.Elements);
+
         private string m_FilePath;   
         private bool m_ElementMapBuilt;
         private Dictionary<int, Type> _elementMap;
@@ -25,6 +37,18 @@ namespace PSDL
         public Vertex DimensionsCenter { get; set; }
         public float DimensionsRadius  { get; set; }
 
+        private int m_Version = 0;
+        public int Version
+        {
+            get => m_Version;
+            set
+            {
+                if(value > 1)
+                    throw new Exception("Only PSD0 and PSD1 are supported");
+                m_Version = value;
+            }
+        }
+
         //API for elements to use (maybe there's a better way?)
         public int GetTextureIndex(string tex)
         {
@@ -33,7 +57,30 @@ namespace PSDL
 
         public string GetTextureFromCache(int id)
         {
+            //fix for j01
+            if (id < 0)
+                id = 0;
+
+            //fix for out of range
+            if (id >= m_Textures.Count)
+                return null;
+
             return m_Textures[id];
+        }
+
+        //API
+        public ISDLElement[] FindAllElementsOfType<T>()
+        {
+            var elementCollection = new List<ISDLElement>();
+            foreach (var room in Rooms)
+            {
+                foreach (var element in room.Elements)
+                {
+                    if (element is T)
+                        elementCollection.Add(element);
+                }
+            }
+            return elementCollection.ToArray();
         }
 
         private void RebuildElementMap()
@@ -48,7 +95,7 @@ namespace PSDL
             }
         }
 
-        private void Load()
+        private void Load(Stream stream)
         {
             if (!m_ElementMapBuilt)
                 RebuildElementMap();
@@ -59,14 +106,22 @@ namespace PSDL
             Floats.Clear();
             m_Textures.Clear();
 
-            using (var r = new BinaryReader(File.OpenRead(m_FilePath)))
+            using (var r = new BinaryReader(stream, Encoding.ASCII))
             {
                 //verify our magic is PSD0
-                var magic = r.ReadUInt32();
-                if (magic != 809784144)
+                var magic = new string(r.ReadChars(4));
+                if (magic == "PSD0")
+                {
+                    Version = 0;
+                }else if (magic == "PSD1")
+                {
+                    Version = 1;
+                }
+                else
                 {
                     throw new Exception("Incorrect magic, this may not be a PSDL file");
                 }
+
 
                 var targetSize = r.ReadUInt32();
                 if (targetSize != 2)
@@ -92,16 +147,20 @@ namespace PSDL
                 var numTextures = r.ReadUInt32() - 1;
                 for (var i = 0; i < numTextures; i++)
                 {
+                    string textureName = string.Empty;
                     var textureLen = r.ReadByte();
+                    
                     if (textureLen > 0)
                     {
-                        m_Textures.Add(new string(r.ReadChars(textureLen - 1)));
+                        textureName = new string(r.ReadChars(textureLen - 1));
                         r.BaseStream.Seek(1, SeekOrigin.Current);
                     }
-                    else
-                    {
-                        m_Textures.Add(string.Empty);
-                    }
+
+                    m_Textures.Add(textureName);
+
+                    //introduced in version 1
+                    if (Version == 1)
+                        MaterialIndices[textureName] = r.ReadByte();
                 }
 
                 //read rooms
@@ -216,8 +275,8 @@ namespace PSDL
                 DimensionsCenter = new Vertex(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
                 DimensionsRadius = r.ReadSingle();
 
-                //read ai roads        
-                var numAiRoads = r.ReadUInt32();
+                //read ai roads (TODO: Figure out version 1 structure)
+                var numAiRoads = Version == 0 ? r.ReadUInt32() : 0;
                 for (var i = 0; i < numAiRoads; i++)
                 {
                     //lots of unknown stuff
@@ -266,8 +325,9 @@ namespace PSDL
                     AIRoads.Add(new AIRoad((AIRoad.PropulationFlags)flags, floatData1, floatData2, flags3, roadRooms));
                 }
 
+                //HACK: We don't check unconsumed bytes for version one, as we don't fully know the structure
                 var unconsumedBytes = r.BaseStream.Length - r.BaseStream.Position;
-                if (unconsumedBytes > 0)
+                if (unconsumedBytes > 0 && Version == 0)
                     throw new Exception("Reader didn't consume all bytes. Something happened!!");
             }
         }
@@ -365,25 +425,21 @@ namespace PSDL
             }
 
             //next build everything else
-            foreach (var rm in Rooms)
-            {
-                foreach (var el in rm.Elements)
+            foreach(var el in Elements) { 
+                //no Textures, no hash
+                if (el.RequiredTextureCount == 0)
+                    continue;
+
+                var hash = TextureHashString(el.Textures);
+
+                //weird invisble Textures
+                if (hash == null)
+                    continue;
+
+                if (!textureHashDictionary.ContainsKey(hash))
                 {
-                    //no Textures, no hash
-                    if (el.RequiredTextureCount == 0)
-                        continue;
-
-                    var hash = TextureHashString(el.Textures);
-
-                    //weird invisble Textures
-                    if (hash == null)
-                        continue;
-
-                    if (!textureHashDictionary.ContainsKey(hash))
-                    {
-                        textureHashDictionary[hash] = m_Textures.Count;
-                        m_Textures.AddRange(el.Textures);
-                    }
+                    textureHashDictionary[hash] = m_Textures.Count;
+                    m_Textures.AddRange(el.Textures);
                 }
             }
 
@@ -408,6 +464,10 @@ namespace PSDL
         public void RecalculateBounds()
         {
             var average = new Vertex(0, 0, 0);
+            DimensionsMin = new Vertex(0, 0, 0);
+            DimensionsMax = new Vertex(0, 0, 0);
+            DimensionsCenter = average;
+
             foreach (var vtx in Vertices)
             {
                 DimensionsMin.x = Math.Min(vtx.x, DimensionsMin.x);
@@ -427,18 +487,19 @@ namespace PSDL
             {
                 radius = DimensionsMax.y - DimensionsMin.y;
             }
-            else
+            else if(DimensionsMax.z - DimensionsMin.z > radius)
             {
                 radius = DimensionsMax.z - DimensionsMin.z;
             }
             DimensionsRadius = radius/2;
         }
 
-        public void ReSave()
+        public void ReSave(bool overwrite = true)
         {
             if (m_FilePath == null)  
                 throw new Exception("Can't save PSDL file without being constructed from a file path. Use SaveAs instead.");
-
+            if(overwrite)
+                File.Delete(m_FilePath);
             SaveAs(m_FilePath);
         }
 
@@ -458,9 +519,13 @@ namespace PSDL
             //write file
             using (var w = new BinaryWriter(File.OpenWrite(saveAsFile)))
             {
-                //PSD0, and targetSize
-                w.Write((uint)809784144);
-                w.Write((uint)2);
+                //header
+                w.Write('P');
+                w.Write('S');
+                w.Write('D');
+                w.Write(Version.ToString()[0]);
+
+                w.Write((uint)2);//target size
 
                 //Vertices
                 w.Write((uint)Vertices.Count);
@@ -491,6 +556,13 @@ namespace PSDL
                         }
                     }
                     w.Write((byte)0); //null terminator
+
+                    //introduced in version 1
+                    if (Version == 1)
+                    {
+                        MaterialIndices.TryGetValue(texture, out var materialIndex);
+                        w.Write(materialIndex);
+                    }
                 }
 
                 //rooms
@@ -652,12 +724,18 @@ namespace PSDL
             Vertices = new List<Vertex>();
             Rooms = new List<Room>();
             AIRoads = new List<AIRoad>();
+            MaterialIndices = new Dictionary<string, byte>();
         }
 
         public PSDLFile(string psdlPath) : this()
         {
             m_FilePath = psdlPath;
-            Load();
+            Load(new FileStream(psdlPath, FileMode.Open));
+        }
+
+        public PSDLFile(Stream psdlStream) : this()
+        {
+            Load(psdlStream);
         }
     }
 }
