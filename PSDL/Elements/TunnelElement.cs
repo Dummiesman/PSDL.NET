@@ -56,8 +56,19 @@ namespace PSDL.Elements
             Flags = (TunnelFlags) reader.ReadUInt16();
             Unknown1 = reader.ReadByte();
             Height1 = reader.ReadByte();
-            Unknown2 = reader.ReadByte();
-            Height2 = reader.ReadByte();
+
+            //case for really old (beta1 and below) psdls
+            //which don't have the other 2 bytes
+            if (subtype != 2)
+            {
+                Unknown2 = reader.ReadByte();
+                Height2 = reader.ReadByte();
+            }
+            else
+            {
+                Unknown2 = Unknown1;
+                Height2 = Height1;
+            }
 
             if (IsJunctionTunnel)
             {

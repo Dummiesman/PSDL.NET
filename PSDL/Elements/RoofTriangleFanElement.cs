@@ -7,9 +7,28 @@ namespace PSDL.Elements
     public class RoofTriangleFanElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public List<Vertex> Vertices = new List<Vertex>();
-        public Vertex[] GetVertices()
+
+        //IGeometricSDLElement
+        public Vertex[] GetVertices() => Vertices.ToArray();
+        public Vertex GetVertex(int index) => Vertices[index];
+        public void SetVertex(int index, Vertex vertex) => Vertices[index] = vertex;
+        public int GetVertexCount() => Vertices.Count;
+        public void RemoveVertexAt(int idx) => Vertices.RemoveAt(idx);
+        public void AddVertex() => Vertices.Add(Vertices[Vertices.Count - 1].Clone());
+        public void InsertVertex(int idx, Vertex vtx)
         {
-            return Vertices.ToArray();
+            Vertices.Insert(idx, vtx);
+        }
+        public void InsertVertex(int idx)
+        {
+            Vertex source;
+            if (idx == 0)
+                source = Vertices[1];
+            else if (idx == GetVertexCount())
+                source = Vertices[Vertices.Count - 1];
+            else
+                source = Vertices[idx - 1];
+            Vertices.Insert(idx, source.Clone());
         }
 
         public float Height;

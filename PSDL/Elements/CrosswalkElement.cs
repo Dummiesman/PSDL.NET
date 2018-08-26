@@ -8,10 +8,16 @@ namespace PSDL.Elements
     public class CrosswalkElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public Vertex[] Vertices = new Vertex[4];
-        public Vertex[] GetVertices()
-        {
-            return Vertices;
-        }
+
+        //IGeometricSDLElement
+        public Vertex[] GetVertices() => Vertices;
+        public Vertex GetVertex(int index) => Vertices[index];
+        public void SetVertex(int index, Vertex vertex) => Vertices[index] = vertex;
+        public int GetVertexCount() => Vertices.Length;
+        public void RemoveVertexAt(int idx) => throw new NotImplementedException();
+        public void AddVertex() => throw new NotImplementedException();
+        public void InsertVertex(int idx, Vertex vtx) => throw new NotImplementedException();
+        public void InsertVertex(int idx) => throw new NotImplementedException();
 
         //interface
         public ElementType Type => ElementType.Crosswalk;

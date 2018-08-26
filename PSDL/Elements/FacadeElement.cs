@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 
 namespace PSDL.Elements
@@ -6,10 +7,16 @@ namespace PSDL.Elements
     public class FacadeElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
         public Vertex[] Vertices = new Vertex[2];
-        public Vertex[] GetVertices()
-        {
-            return Vertices;
-        }
+
+        //IGeometricSDLElement
+        public Vertex[] GetVertices() => Vertices;
+        public Vertex GetVertex(int index) => Vertices[index];
+        public void SetVertex(int index, Vertex vertex) => Vertices[index] = vertex;
+        public int GetVertexCount() => Vertices.Length;
+        public void RemoveVertexAt(int idx) => throw new NotImplementedException();
+        public void AddVertex() => throw new NotImplementedException();
+        public void InsertVertex(int idx, Vertex vtx) => throw new NotImplementedException();
+        public void InsertVertex(int idx) => throw new NotImplementedException();
 
         public float BottomHeight;
         public float TopHeight;

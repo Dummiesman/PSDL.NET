@@ -7,30 +7,21 @@ namespace PSDL.Elements
 {
     public class DividedRoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement
     {
-        public enum DividerType : byte
-        {
-            Invisible = 0,
-            Flat = 1,
-            Elevated = 2,
-            Wedged = 3
-        }
-
-        [Flags]
-        public enum DividerFlags : byte
-        {
-            ClosedEnd = 32,
-            ClosedStart = 16,
-        }
-
         public List<Vertex> Vertices = new List<Vertex>();
-        public Vertex[] GetVertices()
-        {
-            return Vertices.ToArray();
-        }
+
+        //IGeometricSDLElement
+        public Vertex[] GetVertices() => Vertices.ToArray();
+        public Vertex GetVertex(int index) => Vertices[index];
+        public void SetVertex(int index, Vertex vertex) => Vertices[index] = vertex;
+        public int GetVertexCount() => Vertices.Count;
+        public void RemoveVertexAt(int idx) => throw new NotImplementedException();
+        public void AddVertex() => throw new NotImplementedException();
+        public void InsertVertex(int idx, Vertex vtx) => throw new NotImplementedException();
+        public void InsertVertex(int idx) => throw new NotImplementedException();
 
         public ushort Value;
-        public DividerType DivType;
-        public DividerFlags DivFlags;
+        public DividerType DividerType;
+        public DividerFlags DividerFlags;
         public byte DividerTexture;
 
         public string[] DividerTextures { get; set; }
@@ -54,8 +45,8 @@ namespace PSDL.Elements
                 numSections = reader.ReadUInt16();
 
             var flagType = reader.ReadByte();
-            DivFlags = (DividerFlags)(flagType >> 2);
-            DivType = (DividerType)(flagType & 3);
+            DividerFlags = (DividerFlags)(flagType >> 2);
+            DividerType = (DividerType)(flagType & 3);
 
             DividerTexture = reader.ReadByte(); //texture for divider what the fuck Angel!?
             DividerTextures = new[]
@@ -84,7 +75,7 @@ namespace PSDL.Elements
                 writer.Write((ushort)(Vertices.Count / 6));
             }
 
-            writer.Write((byte)(((byte)DivFlags << 2) | (byte)DivType));
+            writer.Write((byte)(((byte)DividerFlags << 2) | (byte)DividerType));
             writer.Write(DividerTexture);
             writer.Write(Value);
 
@@ -111,7 +102,7 @@ namespace PSDL.Elements
             switch (type)
             {
                 case DividerTextureType.Top:
-                    if (DivType == DividerType.Wedged || DivType == DividerType.Elevated)
+                    if (DividerType == DividerType.Wedged || DividerType == DividerType.Elevated)
                     {
                         return DividerTextures[2];
                     }
@@ -121,17 +112,17 @@ namespace PSDL.Elements
                     }
                     break;
                 case DividerTextureType.Side:
-                    if (DivType == DividerType.Wedged)
+                    if (DividerType == DividerType.Wedged)
                     {
                         return DividerTextures[1];
                     }
-                    else if (DivType == DividerType.Elevated)
+                    else if (DividerType == DividerType.Elevated)
                     {
                         return DividerTextures[0];
                     }
                     break;
                 case DividerTextureType.SideStrips:
-                    if (DivType == DividerType.Elevated)
+                    if (DividerType == DividerType.Elevated)
                         return DividerTextures[1];
                     break;
                 case DividerTextureType.Cap:
@@ -146,7 +137,7 @@ namespace PSDL.Elements
             switch (type)
             {
                 case DividerTextureType.Top:
-                    if (DivType == DividerType.Wedged || DivType == DividerType.Elevated)
+                    if (DividerType == DividerType.Wedged || DividerType == DividerType.Elevated)
                     {
                         DividerTextures[2] = texture;
                     }
@@ -156,17 +147,17 @@ namespace PSDL.Elements
                     }
                     break;
                 case DividerTextureType.Side:
-                    if (DivType == DividerType.Wedged)
+                    if (DividerType == DividerType.Wedged)
                     {
                         DividerTextures[1] = texture;
                     }
-                    else if (DivType == DividerType.Elevated)
+                    else if (DividerType == DividerType.Elevated)
                     {
                         DividerTextures[0] = texture;
                     }
                     break;
                 case DividerTextureType.SideStrips:
-                    if(DivType == DividerType.Elevated)
+                    if(DividerType == DividerType.Elevated)
                         DividerTextures[1] = texture;
                     break;
                 case DividerTextureType.Cap:
