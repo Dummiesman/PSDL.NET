@@ -34,10 +34,22 @@ namespace PSDL.Elements
 
         public TunnelFlags Flags;
 
-        public byte Height1;
-        public byte Height2;
-        public byte Unknown1;
-        public byte Unknown2;
+        /// <summary>
+        /// Height of the tunnel. Maximum 255 meters.
+        /// </summary>
+        public float Height;
+        public ushort Unknown;
+
+        //properties
+        /// <summary>
+        /// Wall width is equivalent of Height * (1 / 3). It's automatically determined, and cannot be set.
+        /// </summary>
+        public float WallWidth => Height * (1f / 3f);
+
+        /// <summary>
+        /// Wall underside depth is equivalent of Height * (1 / 4). It's automatically determined
+        /// </summary>
+        public float WallUndersideDepth => Height * (1f / 4f);
 
         //interface
         public ElementType Type => ElementType.Tunnel;
@@ -54,20 +66,13 @@ namespace PSDL.Elements
             }
 
             Flags = (TunnelFlags) reader.ReadUInt16();
-            Unknown1 = reader.ReadByte();
-            Height1 = reader.ReadByte();
+            Height = reader.ReadUInt16() / 256f;
 
             //case for really old (beta1 and below) psdls
             //which don't have the other 2 bytes
             if (subtype != 2)
             {
-                Unknown2 = reader.ReadByte();
-                Height2 = reader.ReadByte();
-            }
-            else
-            {
-                Unknown2 = Unknown1;
-                Height2 = Height1;
+                Unknown = reader.ReadUInt16();
             }
 
             if (IsJunctionTunnel)
@@ -91,10 +96,9 @@ namespace PSDL.Elements
             }
 
             writer.Write((ushort)Flags);
-            writer.Write(Unknown1);
-            writer.Write(Height1);
-            writer.Write(Unknown2);
-            writer.Write(Height2);
+            writer.Write((ushort)Height * 256f);
+            writer.Write(Unknown);
+
 
             if (IsJunctionTunnel)
             {
