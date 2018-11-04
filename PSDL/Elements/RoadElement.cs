@@ -131,7 +131,7 @@ namespace PSDL.Elements
         public Vertex GetRowCenterPoint(int rowId)
         {
             var row = GetRow(rowId);
-            return (row[0] + row[3]) / 2;
+            return (row[1] + row[2]) / 2;
         }
 
         //Constructors
@@ -151,7 +151,8 @@ namespace PSDL.Elements
 
         public RoadElement()
         {
-            //But nobody came
+            //init texture array
+            Textures = new string[3];
         }
 
     }
