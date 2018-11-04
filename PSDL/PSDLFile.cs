@@ -95,6 +95,29 @@ namespace PSDL
             }
         }
 
+        /// <summary>
+        /// Gets a range from m_Textures, will return null entries for anything out of range
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        private List<string> GetTextureRange(int start, int count)
+        {
+            List<string> returnList = new List<string>(count);
+            for (int i = start; i < start + count; i++)
+            {
+                if (i >= m_Textures.Count)
+                {
+                    returnList.Add(null);
+                }
+                else
+                {
+                    returnList.Add(m_Textures[i]);
+                }
+            }
+            return returnList;
+        }
+
         private void Load(Stream stream)
         {
             if (!m_ElementMapBuilt)
@@ -210,7 +233,7 @@ namespace PSDL
 
                         //get the loader
                         ISDLElement loader = (ISDLElement)Activator.CreateInstance(_elementMap[type]);
-
+                        
                         //some Elements require a texture offset
                         var textureOffset = loader.TextureIndexOffset;
 
@@ -222,7 +245,7 @@ namespace PSDL
                         {
                             if (currentTextureId != 65535)
                             {
-                                loader.Textures = m_Textures.GetRange((int)currentTextureId + textureOffset, requiredTextureCount).ToArray();
+                                loader.Textures = GetTextureRange((int)currentTextureId + textureOffset, requiredTextureCount).ToArray();
                             }
                             else
                             {
