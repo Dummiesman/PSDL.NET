@@ -96,7 +96,7 @@ namespace PSDL.Elements
             }
 
             writer.Write((ushort)Flags);
-            writer.Write((ushort)Height * 256f);
+            writer.Write((ushort)(Height * 256f));
             writer.Write(Unknown);
 
 
