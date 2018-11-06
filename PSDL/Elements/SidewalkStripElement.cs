@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class SidewalkStripElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class SidewalkStripElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -32,8 +32,8 @@ namespace PSDL.Elements
             Vertices.Insert(idx, source.Clone());
         }
 
-        public bool IsStartCap;
-        public bool IsEndCap;
+        public bool IsStartCap = false;
+        public bool IsEndCap = false;
 
         //interface
         public ElementType Type => ElementType.SidewalkStrip;
@@ -114,6 +114,22 @@ namespace PSDL.Elements
             {
                 writer.Write((ushort)parent.Vertices.IndexOf(Vertices[i]));
             }
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            var cloneStrip = new SidewalkStripElement
+            {
+                Textures = new[] {this.Textures[0]},
+                IsStartCap = this.IsStartCap,
+                IsEndCap = this.IsEndCap
+            };
+
+            for(int i=0; i < this.Vertices.Count; i++)
+                cloneStrip.Vertices.Add(this.Vertices[i].Clone());;
+
+            return cloneStrip;
         }
 
         //Constructurs

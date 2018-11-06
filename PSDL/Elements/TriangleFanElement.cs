@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 
 namespace PSDL.Elements
 {
-    public class TriangleFanElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class TriangleFanElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -70,6 +71,22 @@ namespace PSDL.Elements
             {
                 writer.Write((ushort)parent.Vertices.IndexOf(Vertices[i]));
             }
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            var cloneTriFan = new TriangleFanElement()
+            {
+                Textures = new[] { this.Textures[0] },
+            };
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                cloneTriFan.Vertices.Add(Vertices[i].Clone());
+            }
+
+            return cloneTriFan;
         }
 
         //Constructors

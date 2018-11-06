@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class RoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class RoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -132,6 +132,17 @@ namespace PSDL.Elements
         {
             var row = GetRow(rowId);
             return (row[1] + row[2]) / 2;
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            var cloneRoad = new RoadElement(this.Textures[0], this.Textures[1], this.Textures[2]);
+
+            for(int i=0; i < this.Vertices.Count; i++)
+                cloneRoad.Vertices.Add(this.Vertices[i].Clone());
+
+            return cloneRoad;
         }
 
         //Constructors

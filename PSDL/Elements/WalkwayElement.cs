@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class WalkwayElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class WalkwayElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -102,6 +102,22 @@ namespace PSDL.Elements
         {
             var row = GetRow(rowId);
             return new Vertex((row[0].x + row[1].x) / 2, (row[0].y + row[1].y) / 2, (row[0].z + row[1].z) / 2);
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            var cloneWalkway = new WalkwayElement()
+            {
+                Textures = new[] { this.Textures[0] },
+            };
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                cloneWalkway.Vertices.Add(Vertices[i].Clone());
+            }
+
+            return cloneWalkway;
         }
 
         //Constructors

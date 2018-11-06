@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace PSDL.Elements
 {
-    public class CrosswalkElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class CrosswalkElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public Vertex[] Vertices = new Vertex[4];
 
@@ -40,6 +40,23 @@ namespace PSDL.Elements
             {
                 writer.Write((ushort)parent.Vertices.IndexOf(Vertices[i]));
             }
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            var cloneCrosswalk = new CrosswalkElement
+            {
+                Textures = new[] {this.Textures[0]},
+                Vertices = new Vertex[4]
+            };
+
+            for (int i = 0; i < Vertices.Length; i++)
+            {
+                cloneCrosswalk.Vertices[i] = Vertices[i].Clone();
+            }
+
+            return cloneCrosswalk;
         }
 
         //Constructors

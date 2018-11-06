@@ -3,7 +3,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class FacadeBoundElement : SDLElementBase,  IGeometricSDLElement, ISDLElement
+    public class FacadeBoundElement : SDLElementBase,  IGeometricSDLElement, ISDLElement, ICloneable
     {
         public Vertex[] Vertices = new Vertex[2];
 
@@ -53,6 +53,12 @@ namespace PSDL.Elements
             float yDiff = Vertices[1].z - Vertices[0].z;
             double angle =  ((Math.Atan2(yDiff, xDiff) * (180 / Math.PI)) + 180);
             LightAngle = (float)angle;
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            return new FacadeBoundElement(this.LightAngle, this.Height, this.Vertices[0].Clone(), this.Vertices[1].Clone());
         }
 
         //Constructors

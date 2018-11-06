@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class DividedRoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class DividedRoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -22,9 +22,13 @@ namespace PSDL.Elements
         public ushort Value;
         public DividerType DividerType;
         public DividerFlags DividerFlags;
-        public byte DividerTexture;
 
-        public string[] DividerTextures { get; set; }
+        /// <summary>
+        /// Only used internally, do not set this directly
+        /// </summary>
+        internal byte DividerTexture;
+
+        public string[] DividerTextures = new string[4];
 
         //interface
         public ElementType Type => ElementType.DividedRoad;
@@ -232,6 +236,25 @@ namespace PSDL.Elements
             return (row[0] + row[5]) / 2;
         }
 
+        //Clone interface
+        public object Clone()
+        {
+            var cloneRoad = new DividedRoadElement()
+            {
+                DividerFlags = this.DividerFlags,
+                Value = this.Value,
+                DividerType = this.DividerType,
+                Textures = new string[this.Textures.Length],
+            };
 
+            //clone arrays
+            DividerTextures.CopyTo(cloneRoad.DividerTextures, 0);
+            Textures.CopyTo(cloneRoad.Textures, 0);
+
+            for (int i = 0; i < this.Vertices.Count; i++)
+                cloneRoad.Vertices.Add(this.Vertices[i].Clone());
+
+            return cloneRoad;
+        }
     }
 }

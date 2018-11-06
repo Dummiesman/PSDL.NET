@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class SliverElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class SliverElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public Vertex[] Vertices = new Vertex[2];
 
@@ -51,7 +51,25 @@ namespace PSDL.Elements
             TextureScale = (float) numTiles / v1.Distance(v2);
         }
 
-       //Constructors
+        //Clone interface
+        public object Clone()
+        {
+            var cloneSliver = new SliverElement
+            {
+                Textures = new[] {this.Textures[0]},
+                Height = this.Height,
+                TextureScale = this.TextureScale
+            };
+
+            for (int i = 0; i < Vertices.Length; i++)
+            {
+                cloneSliver.Vertices[i] = this.Vertices[i].Clone();
+            }
+
+            return cloneSliver;
+        }
+
+        //Constructors
         public SliverElement(string texture, float height, float textureScale, Vertex leftVertex, Vertex rightVertex)
         {
             Textures = new [] { texture };

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class FacadeElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class FacadeElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public Vertex[] Vertices = new Vertex[2];
 
@@ -55,6 +55,18 @@ namespace PSDL.Elements
             var bound = new FacadeBoundElement(0, this.TopHeight, Vertices[0], Vertices[1]);
             bound.RecalculateAngle();
             return bound;
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            return new FacadeElement(this.Textures[0],
+                                     this.BottomHeight, 
+                                     this.TopHeight, 
+                                     this.UTiling, 
+                                     this.VTiling, 
+                                     this.Vertices[0].Clone(), 
+                                     this.Vertices[1].Clone());
         }
 
         //Constructors

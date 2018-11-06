@@ -6,7 +6,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class TunnelElement : SDLElementBase, ISDLElement
+    public class TunnelElement : SDLElementBase, ISDLElement, ICloneable
     {
         [Flags]
         public enum TunnelFlags : ushort
@@ -116,6 +116,26 @@ namespace PSDL.Elements
                     writer.Write((byte)0);
                 }
             }
+        }
+
+        //Clone interface
+        public object Clone()
+        {
+            var cloneTunnel = new TunnelElement {Textures = new string[Textures.Length]};
+
+            //clone texture array
+            cloneTunnel.Textures = new string[this.Textures.Length];
+            this.Textures.CopyTo(cloneTunnel.Textures, 0);
+            
+            //clone properties
+            cloneTunnel.Flags = this.Flags;
+            cloneTunnel.Height = this.Height;
+            cloneTunnel.IsJunctionTunnel = this.IsJunctionTunnel;
+            cloneTunnel.JunctionCeilingBits = this.JunctionCeilingBits;
+            cloneTunnel.JunctionWalls.AddRange(this.JunctionWalls);
+            cloneTunnel.Unknown = this.Unknown;
+
+            return cloneTunnel;
         }
 
         //Constructors TODO: Create static constructors such as CreateWall CreateTunnel CreateJunctionWall CreateJunctionTunnel, because this is crap

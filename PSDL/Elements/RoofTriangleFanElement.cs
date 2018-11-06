@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 
 namespace PSDL.Elements
 {
-    public class RoofTriangleFanElement : SDLElementBase, IGeometricSDLElement, ISDLElement
+    public class RoofTriangleFanElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -77,6 +78,23 @@ namespace PSDL.Elements
             }
         }
 
+        //Clone interface
+        public object Clone()
+        {
+            var cloneTriFan = new RoofTriangleFanElement()
+            {
+                Textures = new[] { this.Textures[0] },
+                Height = this.Height
+            };
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                cloneTriFan.Vertices.Add(Vertices[i].Clone());
+            }
+            
+            return cloneTriFan;
+        }
+
         //Constructors
         public RoofTriangleFanElement(string texture, float height, IEnumerable<Vertex> vertices)
         {
@@ -89,6 +107,5 @@ namespace PSDL.Elements
         {
             //But nobody came
         }
-
     }
 }
