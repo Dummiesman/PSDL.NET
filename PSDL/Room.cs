@@ -124,16 +124,14 @@ namespace PSDL
                 if (el is IGeometricSDLElement)
                 {
                     var GeometricElement = (IGeometricSDLElement) el;
-                    gatheredVertices.UnionWith(GeometricElement.GetVertices());
+                    foreach (var vtx in GeometricElement.GetVertices())
+                        yield return vtx;
                 }
             }
 
             if (includePerimeter)
-                gatheredVertices.UnionWith(GatherPerimeterVertices());
-
-            var gatheredVertsArray = gatheredVertices.ToArray();
-            gatheredVertices.Clear();
-            return gatheredVertsArray;
+                foreach (var vtx in GatherPerimeterVertices())
+                    yield return vtx;
         }
 
         public IEnumerable<float> GatherFloats()
@@ -147,35 +145,31 @@ namespace PSDL
                     case ElementType.FacadeBound:
                         {
                             var cacheElement = (FacadeBoundElement)el;
-                            gatheredFloats.Add(cacheElement.Height);
+                            yield return cacheElement.Height;
                             break;
                         }
                     case ElementType.RoofTriangleFan:
                         {
                             var cacheElement = (RoofTriangleFanElement)el;
-                            gatheredFloats.Add(cacheElement.Height);
+                            yield return cacheElement.Height;
                             break;
                         }
                     case ElementType.Facade:
                         {
                             var cacheElement = (FacadeElement)el;
-                            gatheredFloats.Add(cacheElement.BottomHeight);
-                            gatheredFloats.Add(cacheElement.TopHeight);
+                            yield return cacheElement.BottomHeight;
+                            yield return cacheElement.TopHeight;
                             break;
                         }
                     case ElementType.Sliver:
                         {
                             var cacheElement = (SliverElement)el;
-                            gatheredFloats.Add(cacheElement.TextureScale);
-                            gatheredFloats.Add(cacheElement.Height);
+                            yield return cacheElement.TextureScale;
+                            yield return cacheElement.Height;
                             break;
                         }
                 }
             }
-
-            var gatheredFloatsArray = gatheredFloats.ToArray();
-            gatheredFloats.Clear();
-            return gatheredFloatsArray;
         }
 
         //Constructors
