@@ -112,7 +112,7 @@ namespace PSDL.Elements
 
             for (var i = 0; i < Vertices.Count; i++)
             {
-                writer.Write((ushort)parent.Vertices.IndexOf(Vertices[i]));
+                writer.Write((ushort)parent.GetVertexIndex(Vertices[i]));
             }
         }
 

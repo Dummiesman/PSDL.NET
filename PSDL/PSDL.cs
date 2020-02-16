@@ -63,15 +63,14 @@ namespace PSDL
 
         public override int GetHashCode()
         {
-            return Convert.ToInt32(x * y * z);
+            return this.x.GetHashCode() ^ this.y.GetHashCode() << 2 ^ this.z.GetHashCode() >> 2;
         }
 
         public override bool Equals(object obj)
         {
-            var vertex = obj as Vertex;
-            if(vertex != null)
+            if (obj is Vertex vertex)
             {
-                if(vertex.x.Equals(x) && vertex.y.Equals(y) && vertex.z.Equals(z))
+                if (vertex.x.Equals(x) && vertex.y.Equals(y) && vertex.z.Equals(z))
                 {
                     return true;
                 }

@@ -86,7 +86,7 @@ namespace PSDL.Elements
             //write indices
             for (var i = 0; i < Vertices.Count; i++)
             {
-                writer.Write((ushort)parent.Vertices.IndexOf(Vertices[i]));
+                writer.Write((ushort)parent.GetVertexIndex(Vertices[i]));
             }
         }
 
@@ -114,7 +114,6 @@ namespace PSDL.Elements
                     {
                         return DividerTextures[1];
                     }
-                    break;
                 case DividerTextureType.Side:
                     if (DividerType == DividerType.Wedged)
                     {
@@ -131,7 +130,6 @@ namespace PSDL.Elements
                     break;
                 case DividerTextureType.Cap:
                     return DividerTextures[3];
-                    break;
             }
             return string.Empty;
         }

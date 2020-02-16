@@ -70,11 +70,11 @@ namespace PSDL.Elements
                 writer.Write((ushort)(Vertices.Count - 1));
             }
 
-            writer.Write((ushort)parent.Floats.IndexOf(Height));
+            writer.Write((ushort)parent.GetFloatIndex(Height));
             //write indices
             for (var i = 0; i < Vertices.Count; i++)
             {
-                writer.Write((ushort)parent.Vertices.IndexOf(Vertices[i]));
+                writer.Write((ushort)parent.GetVertexIndex(Vertices[i]));
             }
         }
 

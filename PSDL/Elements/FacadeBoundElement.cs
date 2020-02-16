@@ -41,9 +41,9 @@ namespace PSDL.Elements
         public void Save(BinaryWriter writer, PSDLFile parent)
         {
             writer.Write(m_SunAngle);
-            writer.Write((ushort)parent.Floats.IndexOf(Height));
-            writer.Write((ushort)parent.Vertices.IndexOf(Vertices[0]));
-            writer.Write((ushort)parent.Vertices.IndexOf(Vertices[1]));
+            writer.Write((ushort)parent.GetFloatIndex(Height));
+            writer.Write((ushort)parent.GetVertexIndex(Vertices[0]));
+            writer.Write((ushort)parent.GetVertexIndex(Vertices[1]));
         }
 
         //API

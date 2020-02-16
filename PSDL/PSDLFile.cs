@@ -49,12 +49,42 @@ namespace PSDL
             }
         }
 
+        /// <summary>
+        /// Performance tweak. Makes CalculateBounds only use perimeter vertices.
+        /// </summary>
+        public static bool FasterCalculateBounds = true;
+
         //API for elements to use (maybe there's a better way?)
+        private Dictionary<Vertex, int> m_VertexIndexMap = new Dictionary<Vertex, int>();
+        private Dictionary<float, int> m_FloatMap = new Dictionary<float, int>();
+
+        /// <summary>
+        /// Only to be used by SDLElement.Save
+        /// </summary>
+        public int GetFloatIndex(float flt)
+        {
+            return m_FloatMap[flt];
+        }
+
+        /// <summary>
+        /// Only to be used by SDLElement.Save
+        /// </summary>
+        public int GetVertexIndex(Vertex vtx)
+        {
+            return m_VertexIndexMap[vtx];
+        }
+
+        /// <summary>
+        /// Only to be used by SDLElement.Save
+        /// </summary>
         public int GetTextureIndex(string tex)
         {
             return m_Textures.IndexOf(tex);
         }
 
+        /// <summary>
+        /// Only to be used by SDLElement.Save
+        /// </summary>
         public string GetTextureFromCache(int id)
         {
             //fix for j01
@@ -387,15 +417,18 @@ namespace PSDL
         private void RefreshVertexCache()
         {
             Vertices.Clear();
-            var hashVertexList = new HashSet<Vertex>();
-
+            m_VertexIndexMap.Clear();
             foreach (var rm in Rooms)
             {
-                hashVertexList.UnionWith(rm.GatherVertices());
+                foreach(var vtx in rm.GatherVertices())
+                {
+                    if (!m_VertexIndexMap.ContainsKey(vtx))
+                    {
+                        m_VertexIndexMap.Add(vtx, Vertices.Count);
+                        Vertices.Add(vtx);
+                    }
+                }
             }
-
-            Vertices.AddRange(hashVertexList);
-            hashVertexList.Clear();
         }
 
         private Dictionary<string, int> GenerateTextureHashDictionary()
@@ -473,15 +506,19 @@ namespace PSDL
         {
             //build floats cache
             Floats.Clear();
-            var hashFloatList = new HashSet<float>();
+            m_FloatMap.Clear();
 
             foreach (var rm in Rooms)
             {
-                hashFloatList.UnionWith(rm.GatherFloats());
+                foreach (var flt in rm.GatherFloats())
+                {
+                    if (!m_FloatMap.ContainsKey(flt))
+                    {
+                        m_FloatMap[flt] = Floats.Count;
+                        Floats.Add(flt);
+                    }
+                }
             }
-
-            Floats.AddRange(hashFloatList);
-            hashFloatList.Clear();
         }
 
         public void RecalculateBounds()
@@ -491,18 +528,40 @@ namespace PSDL
             DimensionsMax = new Vertex(0, 0, 0);
             DimensionsCenter = average;
 
-            foreach (var vtx in Vertices)
+            int count = 0;
+            if (FasterCalculateBounds)
             {
-                DimensionsMin.x = Math.Min(vtx.x, DimensionsMin.x);
-                DimensionsMin.y = Math.Min(vtx.y, DimensionsMin.y);
-                DimensionsMin.z = Math.Min(vtx.z, DimensionsMin.z);
-                DimensionsMax.x = Math.Max(vtx.x, DimensionsMax.x);
-                DimensionsMax.y = Math.Max(vtx.y, DimensionsMax.y);
-                DimensionsMax.z = Math.Max(vtx.z, DimensionsMax.z);
-                average += vtx;
+                foreach (var room in Rooms)
+                {
+                    foreach (var vtx in room.Perimeter)
+                    {
+                        DimensionsMin.x = Math.Min(vtx.Vertex.x, DimensionsMin.x);
+                        DimensionsMin.y = Math.Min(vtx.Vertex.y, DimensionsMin.y);
+                        DimensionsMin.z = Math.Min(vtx.Vertex.z, DimensionsMin.z);
+                        DimensionsMax.x = Math.Max(vtx.Vertex.x, DimensionsMax.x);
+                        DimensionsMax.y = Math.Max(vtx.Vertex.y, DimensionsMax.y);
+                        DimensionsMax.z = Math.Max(vtx.Vertex.z, DimensionsMax.z);
+                        average += vtx.Vertex;
+                        count++;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var vtx in Vertices)
+                {
+                    DimensionsMin.x = Math.Min(vtx.x, DimensionsMin.x);
+                    DimensionsMin.y = Math.Min(vtx.y, DimensionsMin.y);
+                    DimensionsMin.z = Math.Min(vtx.z, DimensionsMin.z);
+                    DimensionsMax.x = Math.Max(vtx.x, DimensionsMax.x);
+                    DimensionsMax.y = Math.Max(vtx.y, DimensionsMax.y);
+                    DimensionsMax.z = Math.Max(vtx.z, DimensionsMax.z);
+                    average += vtx;
+                    count++;
+                }
             }
 
-            average /= Vertices.Count;
+            average /= count;
             DimensionsCenter = average;
 
             float radius = DimensionsMax.x - DimensionsMin.x;
@@ -601,7 +660,7 @@ namespace PSDL
                     //write Perimeter
                     foreach (var pp in room.Perimeter)
                     {
-                        w.Write((ushort)Vertices.IndexOf(pp.Vertex));
+                        w.Write((ushort)GetVertexIndex(pp.Vertex));
 
                         if (pp.ConnectedRoom == null)
                         {
@@ -722,11 +781,11 @@ namespace PSDL
                     var endCrossroads = endRoom.GetCrossroadVertices(CrossroadEnd.Last);
                     foreach(var vertex in startCrossroads)
                     {
-                        w.Write((ushort)Vertices.IndexOf(vertex));
+                        w.Write((ushort)GetVertexIndex(vertex));
                     }
                     foreach (var vertex in endCrossroads)
                     {
-                        w.Write((ushort)Vertices.IndexOf(vertex));
+                        w.Write((ushort)GetVertexIndex(vertex));
                     }
 
 
