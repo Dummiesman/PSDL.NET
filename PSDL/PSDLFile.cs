@@ -99,18 +99,16 @@ namespace PSDL
         }
 
         //API
-        public ISDLElement[] FindAllElementsOfType<T>()
+        public IEnumerable<T> FindAllElementsOfType<T>() where T: ISDLElement
         {
-            var elementCollection = new List<ISDLElement>();
             foreach (var room in Rooms)
             {
                 foreach (var element in room.Elements)
                 {
                     if (element is T)
-                        elementCollection.Add(element);
+                        yield return (T)element;
                 }
             }
-            return elementCollection.ToArray();
         }
 
         private void RebuildElementMap()
