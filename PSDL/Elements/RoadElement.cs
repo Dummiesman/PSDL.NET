@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class RoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
+    public class RoadElement : SDLElementBase, IRoad, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -17,6 +17,71 @@ namespace PSDL.Elements
         public void AddVertex() => throw new NotImplementedException();
         public void InsertVertex(int idx, Vertex vtx) => throw new NotImplementedException();
         public void InsertVertex(int idx) => throw new NotImplementedException();
+
+        //IRoad
+        public int RowCount => Vertices.Count / RowBreadth;
+        public int RowBreadth => 4;
+
+        public void SetTexture(RoadTextureType type, string texture)
+        {
+            Textures[(int)type] = texture;
+        }
+
+        public string GetTexture(RoadTextureType type)
+        {
+            return Textures[(int)type];
+        }
+
+        public Vertex[] GetSidewalkBoundary(int rowNum)
+        {
+            return GetRow(rowNum);
+        }
+
+        public void DeleteSidewalk(SidewalkRemovalMode mode)
+        {
+            //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
+            for (int i = 0; i < RowCount; i++)
+            {
+                var row = GetRow(i);
+                if (mode == SidewalkRemovalMode.MoveRoadOutwards)
+                {
+                    row[1] = row[0];
+                    row[2] = row[3];
+                }
+                else
+                {
+                    row[0] = row[1];
+                    row[3] = row[2];
+                }
+                SetRow(i, row);
+            }
+        }
+
+        public void AddRow(Vertex[] vertices)
+        {
+            if (vertices.Length != 4)
+                throw new Exception("Wrong amount of vertices for a row.");
+            AddRow(vertices[0], vertices[1], vertices[2], vertices[3]);
+        }
+
+        public void SetRow(int rowId, Vertex[] vertices)
+        {
+            if (vertices.Length != 4)
+                throw new Exception("Wrong amount of vertices for a row.");
+            SetRow(rowId, vertices[0], vertices[1], vertices[2], vertices[3]);
+        }
+
+        public Vertex[] GetRow(int rowId)
+        {
+            int baseIndex = rowId * 4;
+            return new[] { Vertices[baseIndex], Vertices[baseIndex + 1], Vertices[baseIndex + 2], Vertices[baseIndex + 3] };
+        }
+
+        public Vertex GetRowCenterPoint(int rowId)
+        {
+            var row = GetRow(rowId);
+            return (row[1] + row[2]) / 2f;
+        }
 
         //interface
         public ElementType Type => ElementType.Road;
@@ -60,48 +125,10 @@ namespace PSDL.Elements
         }
 
         //API
-        public void SetTexture(RoadTextureType type, string texture)
-        {
-            Textures[(int) type] = texture;
-        }
-
-        public string GetTexture(RoadTextureType type)
-        {
-            return Textures[(int)type];
-        }
-
-        public int RowCount => Vertices.Count / 4;
-        public void DeleteSidewalk(SidewalkRemovalMode mode)
-        {
-            //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
-            for (int i = 0; i < RowCount; i++)
-            {
-                var row = GetRow(i);
-                if (mode == SidewalkRemovalMode.MoveRoadOutwards)
-                {
-                    row[1] = row[0];
-                    row[2] = row[3];
-                }
-                else
-                {
-                    row[0] = row[1];
-                    row[3] = row[2];
-                }
-                SetRow(i, row);
-            }
-        }
-
         public void AddRow(Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight,
             Vertex sidewalkOuterRight)
         {
             Vertices.AddRange(new []{sidewalkOuterLeft, sidewalkInnerLeft, sidewalkInnerRight, sidewalkOuterRight});
-        }
-
-        public void AddRow(Vertex[] vertices)
-        {
-            if(vertices.Length != 4)
-                throw new Exception("Wrong amount of vertices for a row.");
-            AddRow(vertices[0], vertices[1], vertices[2], vertices[3]);
         }
 
         public void SetRow(int rowId, Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight,
@@ -112,26 +139,6 @@ namespace PSDL.Elements
             Vertices[baseIndex + 1] = sidewalkInnerLeft;
             Vertices[baseIndex + 2] = sidewalkInnerRight;
             Vertices[baseIndex + 3] = sidewalkOuterRight;
-        }
-
-
-        public void SetRow(int rowId, Vertex[] vertices)
-        {
-            if (vertices.Length != 4)
-                throw new Exception("Wrong amount of vertices for a row.");
-            SetRow(rowId, vertices[0], vertices[1], vertices[2], vertices[3]);
-        }
-
-        public Vertex[] GetRow(int rowId)
-        {
-            int baseIndex = rowId * 4;
-            return new []{Vertices[baseIndex], Vertices[baseIndex + 1], Vertices[baseIndex + 2], Vertices[baseIndex + 3]};
-        }
-
-        public Vertex GetRowCenterPoint(int rowId)
-        {
-            var row = GetRow(rowId);
-            return (row[1] + row[2]) / 2;
         }
 
         //Clone interface

@@ -31,6 +31,7 @@ namespace PSDL.Elements
         public CulledTriangleFanElement()
         {
             //But nobody came
+            Textures = new string[] { null };
         }
     }
 }

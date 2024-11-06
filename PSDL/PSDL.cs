@@ -51,6 +51,17 @@ namespace PSDL
             z = _z;
         }
 
+
+        static float Lerp(float firstFloat, float secondFloat, float by)
+        {
+            return firstFloat * (1 - by) + secondFloat * by;
+        }
+
+        public Vertex Lerp(Vertex other, float t)
+        {
+            return new Vertex(Lerp(x, other.x, t), Lerp(y, other.y, t), Lerp(z, other.z, t));
+        }
+
         public Vertex Clone()
         {
             return new Vertex(x, y, z);

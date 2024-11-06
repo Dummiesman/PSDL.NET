@@ -12,6 +12,20 @@ namespace PSDL
         public RoomFlags Flags;
         public byte PropRule;
 
+        public bool PointInRoom(float x, float z)
+        {
+            int i, j = 0;
+            bool c = false;
+            for (i = 0, j = Perimeter.Count - 1; i < Perimeter.Count; j = i++)
+            {
+                if (((Perimeter[i].Vertex.z > z) != (Perimeter[j].Vertex.z > z)) &&
+                 (x < (Perimeter[j].Vertex.x - Perimeter[i].Vertex.x) *
+                 (z - Perimeter[i].Vertex.z) / (Perimeter[j].Vertex.z - Perimeter[i].Vertex.z) + Perimeter[i].Vertex.x))
+                    c = !c;
+            }
+            return c;
+        }
+
         public Vertex[] GetCrossroadVertices(CrossroadEnd end)
         {
             var road = FindElementOfType<RoadElement>() as RoadElement;
@@ -82,25 +96,25 @@ namespace PSDL
             return true;
         }
 
-        public ISDLElement FindElementOfType<T>()
+        public T FindElementOfType<T>() 
         {
             foreach (var element in Elements)
             {
                 if (element is T)
-                    return element;
+                    return (T)element;
             }
-            return null;
+            return default(T);
         }
 
-        public ISDLElement[] FindElementsOfType<T>()
+        public List<T> FindElementsOfType<T>() where T : ISDLElement
         {
-            var elementCollection = new List<ISDLElement>();
+            var elementCollection = new List<T>();
             foreach (var element in Elements)
             {
                 if (element is T)
-                    elementCollection.Add(element);
+                    elementCollection.Add((T)element);
             }
-            return elementCollection.ToArray();
+            return elementCollection;
         }
 
         public IEnumerable<Vertex> GatherPerimeterVertices()
@@ -117,8 +131,6 @@ namespace PSDL
 
         public IEnumerable<Vertex> GatherVertices(bool includePerimeter = true)
         {
-            var gatheredVertices = new HashSet<Vertex>();
-
             foreach (var el in Elements)
             {
                 if (el is IGeometricSDLElement)
@@ -136,8 +148,6 @@ namespace PSDL
 
         public IEnumerable<float> GatherFloats()
         {
-            HashSet<float> gatheredFloats = new HashSet<float>();
-            
             foreach (var el in Elements)
             {
                 switch (el.Type)
@@ -179,7 +189,8 @@ namespace PSDL
             Perimeter = new List<PerimeterPoint>();
         }
 
-        public Room(IEnumerable<ISDLElement> roomElements, IEnumerable<PerimeterPoint> perimeterPoints, byte propRule = 0, RoomFlags flags = 0) : this(){
+        public Room(IEnumerable<ISDLElement> roomElements, IEnumerable<PerimeterPoint> perimeterPoints, byte propRule = 0, RoomFlags flags = 0) : this()
+        {
             Elements.AddRange(roomElements);
             Perimeter.AddRange(perimeterPoints);
             Flags = flags;

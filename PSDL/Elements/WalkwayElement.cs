@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class WalkwayElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
+    public class WalkwayElement : SDLElementBase, IRoad, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -18,6 +18,60 @@ namespace PSDL.Elements
         public void AddVertex() => throw new NotImplementedException();
         public void InsertVertex(int idx, Vertex vtx) => throw new NotImplementedException();
         public void InsertVertex(int idx) => throw new NotImplementedException();
+
+        //IRoad
+        public int RowCount => Vertices.Count / RowBreadth;
+        public int RowBreadth => 2;
+
+        public void AddRow(Vertex[] vertices)
+        {
+            if (vertices.Length != 2)
+                throw new Exception("Wrong amount of vertices for a row.");
+            AddRow(vertices[0], vertices[1]);
+        }
+
+        public void SetRow(int rowId, Vertex[] vertices)
+        {
+            if (vertices.Length != RowBreadth)
+                throw new Exception("Wrong amount of vertices for a row.");
+            SetRow(rowId, vertices[0], vertices[1]);
+        }
+
+        public Vertex[] GetRow(int rowId)
+        {
+            int baseIndex = rowId * 2;
+            return new[] { Vertices[baseIndex], Vertices[baseIndex + 1] };
+        }
+
+        public Vertex GetRowCenterPoint(int rowId)
+        {
+            var row = GetRow(rowId);
+            return new Vertex((row[0].x + row[1].x) / 2, (row[0].y + row[1].y) / 2, (row[0].z + row[1].z) / 2);
+        }
+
+        public void SetTexture(RoadTextureType type, string texture)
+        {
+            if (type == RoadTextureType.Surface)
+            {
+                Textures[0] = texture;
+            }
+        }
+
+        public string GetTexture(RoadTextureType type)
+        {
+            return (type == RoadTextureType.Surface) ? Textures[0] : null;
+        }
+
+        public Vertex[] GetSidewalkBoundary(int rowNum)
+        {
+            var row = GetRow(rowNum);
+            return new Vertex[] { row[0], row[0], row[1], row[1] };
+        }
+
+        public void DeleteSidewalk(SidewalkRemovalMode mode)
+        {
+            // nothing to do here
+        }
 
         //interface
         public ElementType Type => ElementType.Walkway;
@@ -64,45 +118,18 @@ namespace PSDL.Elements
         }
 
         //API
-        public int RowCount => Vertices.Count / 2;
         public void AddRow(Vertex leftSide, Vertex rightSide)
         {
             Vertices.AddRange(new []{leftSide, rightSide});
         }
 
-        public void AddRow(Vertex[] vertices)
-        {
-            if (vertices.Length != 2)
-                throw new Exception("Wrong amount of vertices for a row.");
-            AddRow(vertices[0], vertices[1]);
-        }
-
         public void SetRow(int rowId, Vertex leftSide, Vertex rightSide)
         {
-            int baseIndex = rowId * 2;
+            int baseIndex = rowId * RowBreadth;
             Vertices[baseIndex] = leftSide;
             Vertices[baseIndex + 1] = rightSide;
         }
 
-
-        public void SetRow(int rowId, Vertex[] vertices)
-        {
-            if (vertices.Length != 2)
-                throw new Exception("Wrong amount of vertices for a row.");
-            SetRow(rowId, vertices[0], vertices[1]);
-        }
-
-        public Vertex[] GetRow(int rowId)
-        {
-            int baseIndex = rowId * 2;
-            return new[] { Vertices[baseIndex], Vertices[baseIndex + 1]};
-        }
-
-        public Vertex GetRowCenterPoint(int rowId)
-        {
-            var row = GetRow(rowId);
-            return new Vertex((row[0].x + row[1].x) / 2, (row[0].y + row[1].y) / 2, (row[0].z + row[1].z) / 2);
-        }
 
         //Clone interface
         public object Clone()
@@ -130,6 +157,7 @@ namespace PSDL.Elements
         public WalkwayElement()
         {
             //But nobody came
+            Textures = new string[] { null };
         }
     }
 }

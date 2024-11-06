@@ -460,7 +460,7 @@ namespace PSDL
                         dr.DividerTexture = (byte)(textureHashDictionary[hash] + 1);
                     }
 
-                    //STEP 2 : CACHE ROADS AND TUNNELS, FUCKING PROPULATOR (Propulator throws a fit if we don't do this)
+                    //STEP 2 : CACHE ROADS AND TUNNELS
                     if (el is DividedRoadElement || el is RoadElement || el is TunnelElement || el is WalkwayElement)
                     {
                         var hash = TextureHashString(el.Textures);
@@ -572,6 +572,45 @@ namespace PSDL
                 radius = DimensionsMax.z - DimensionsMin.z;
             }
             DimensionsRadius = radius/2;
+        }
+
+        public int FindRoomId(float x, float z)
+        {
+            for (int i = 0; i < Rooms.Count; i++)
+            {
+                var room = Rooms[i];
+                if (room.PointInRoom(x, z))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public int FindRoomId(float x, float y, float z)
+        {
+            int bestMatchRoom = -1;
+            float bestMatchYDiff = 9999.0f;
+
+            for (int i = 0; i < Rooms.Count; i++)
+            {
+                var room = Rooms[i];
+                if (room.PointInRoom(x, z))
+                {
+                    float closestPerimeterPoint = 9999.0f;
+                    foreach (var point in room.Perimeter)
+                    {
+                        closestPerimeterPoint = Math.Min(closestPerimeterPoint, MathF.Abs(point.Vertex.y - y));
+                    }
+                    
+                    if(closestPerimeterPoint < bestMatchYDiff)
+                    {
+                        bestMatchRoom = i;
+                        bestMatchYDiff = closestPerimeterPoint;
+                    }
+                }
+            }
+            return bestMatchRoom;
         }
 
         public void ReSave(bool overwrite = true)

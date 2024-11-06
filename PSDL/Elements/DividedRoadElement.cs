@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PSDL.Elements
 {
-    public class DividedRoadElement : SDLElementBase, IGeometricSDLElement, ISDLElement, ICloneable
+    public class DividedRoadElement : SDLElementBase, IRoad, IGeometricSDLElement, ISDLElement, ICloneable
     {
         public List<Vertex> Vertices = new List<Vertex>();
 
@@ -30,6 +30,72 @@ namespace PSDL.Elements
 
         public string[] DividerTextures = new string[4];
 
+        //IRoad
+        public int RowCount => Vertices.Count / RowBreadth;
+        public int RowBreadth => 6;
+
+        public Vertex[] GetSidewalkBoundary(int rowNum)
+        {
+            var row = GetRow(rowNum);
+            return new Vertex[] { row[0], row[1], row[4], row[5] };
+        }
+
+        public void SetTexture(RoadTextureType type, string texture)
+        {
+            Textures[(int)type] = texture;
+        }
+
+        public string GetTexture(RoadTextureType type)
+        {
+            return Textures[(int)type];
+        }
+
+        public void DeleteSidewalk(SidewalkRemovalMode mode)
+        {
+            //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
+            for (int i = 0; i < RowCount; i++)
+            {
+                var row = GetRow(i);
+                if (mode == SidewalkRemovalMode.MoveRoadOutwards)
+                {
+                    row[1] = row[0];
+                    row[4] = row[5];
+                }
+                else
+                {
+                    row[0] = row[1];
+                    row[5] = row[4];
+                }
+                SetRow(i, row);
+            }
+        }
+
+        public void AddRow(Vertex[] vertices)
+        {
+            if (vertices.Length != 6)
+                throw new Exception("Wrong amount of vertices for a row.");
+            AddRow(vertices[0], vertices[1], vertices[2], vertices[3], vertices[4], vertices[5]);
+        }
+
+        public void SetRow(int rowId, Vertex[] vertices)
+        {
+            if (vertices.Length != 6)
+                throw new Exception("Wrong amount of vertices for a row.");
+            SetRow(rowId, vertices[0], vertices[1], vertices[2], vertices[3], vertices[4], vertices[5]);
+        }
+
+        public Vertex[] GetRow(int rowId)
+        {
+            int baseIndex = rowId * 6;
+            return new[] { Vertices[baseIndex], Vertices[baseIndex + 1], Vertices[baseIndex + 2], Vertices[baseIndex + 3], Vertices[baseIndex + 4], Vertices[baseIndex + 5] };
+        }
+
+        public Vertex GetRowCenterPoint(int rowId)
+        {
+            var row = GetRow(rowId);
+            return (row[0] + row[5]) / 2f;
+        }
+
         //interface
         public ElementType Type => ElementType.DividedRoad;
         public int Subtype
@@ -52,7 +118,7 @@ namespace PSDL.Elements
             DividerFlags = (DividerFlags)(flagType >> 2);
             DividerType = (DividerType)(flagType & 3);
 
-            DividerTexture = reader.ReadByte(); //texture for divider what the fuck Angel!?
+            DividerTexture = reader.ReadByte(); 
             DividerTextures = new[]
             {
                 parent.GetTextureFromCache(DividerTexture - 1), parent.GetTextureFromCache(DividerTexture),
@@ -91,16 +157,6 @@ namespace PSDL.Elements
         }
 
         //API
-        public void SetTexture(RoadTextureType type, string texture)
-        {
-            Textures[(int) type] = texture;
-        }
-
-        public string GetTexture(RoadTextureType type)
-        {
-            return Textures[(int)type];
-        }
-
         public string GetDividerTexture(DividerTextureType type)
         {
             switch (type)
@@ -168,38 +224,9 @@ namespace PSDL.Elements
             }
         }
 
-        public int RowCount => Vertices.Count / 6;
-        public void DeleteSidewalk(SidewalkRemovalMode mode)
-        {
-            //mm2 says if vert[0] == vert[1] then don't draw the sidewalk
-            for (int i = 0; i < RowCount; i++)
-            {
-                var row = GetRow(i);
-                if (mode == SidewalkRemovalMode.MoveRoadOutwards)
-                {
-                    row[1] = row[0];
-                    row[4] = row[5];
-                }
-                else
-                {
-                    row[0] = row[1];
-                    row[5] = row[4];
-                }
-                SetRow(i, row);
-            }
-        }
-
-        public void AddRow(Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight, Vertex dividerLeft, Vertex dividerRight,
-            Vertex sidewalkOuterRight)
+        public void AddRow(Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex dividerLeft, Vertex dividerRight, Vertex sidewalkInnerRight, Vertex sidewalkOuterRight )
         {
             Vertices.AddRange(new[] { sidewalkOuterLeft, sidewalkInnerLeft, dividerLeft, dividerRight, sidewalkInnerRight, sidewalkOuterRight });
-        }
-
-        public void AddRow(Vertex[] vertices)
-        {
-            if (vertices.Length != 6)
-                throw new Exception("Wrong amount of vertices for a row.");
-            AddRow(vertices[0], vertices[1], vertices[2], vertices[3], vertices[4], vertices[5]);
         }
 
         public void SetRow(int rowId, Vertex sidewalkOuterLeft, Vertex sidewalkInnerLeft, Vertex sidewalkInnerRight, Vertex dividerLeft, Vertex dividerRight,
@@ -214,25 +241,6 @@ namespace PSDL.Elements
             Vertices[baseIndex + 5] = sidewalkOuterRight;
         }
 
-
-        public void SetRow(int rowId, Vertex[] vertices)
-        {
-            if (vertices.Length != 6)
-                throw new Exception("Wrong amount of vertices for a row.");
-            SetRow(rowId, vertices[0], vertices[1], vertices[2], vertices[3], vertices[4], vertices[5]);
-        }
-
-        public Vertex[] GetRow(int rowId)
-        {
-            int baseIndex = rowId * 6;
-            return new[] { Vertices[baseIndex], Vertices[baseIndex + 1], Vertices[baseIndex + 2], Vertices[baseIndex + 3], Vertices[baseIndex + 4], Vertices[baseIndex + 5] };
-        }
-
-        public Vertex GetRowCenterPoint(int rowId)
-        {
-            var row = GetRow(rowId);
-            return (row[0] + row[5]) / 2;
-        }
 
         //Clone interface
         public object Clone()
@@ -253,6 +261,16 @@ namespace PSDL.Elements
                 cloneRoad.Vertices.Add(this.Vertices[i].Clone());
 
             return cloneRoad;
+        }
+
+        public DividedRoadElement(string roadTexture, string sidewalkTexture, string LODTexture)
+        {
+            Textures = new[] { roadTexture, sidewalkTexture, LODTexture };
+        }
+
+        public DividedRoadElement()
+        {
+            Textures = new string[] { null, null, null };
         }
     }
 }
